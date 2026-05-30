@@ -138,16 +138,17 @@
             position: absolute; width: 26px; height: 26px; background: white; border: 2px solid #ddd;
             z-index: 2; transition: all 0.3s;
             display: flex; align-items: center; justify-content: center;
+            box-sizing: border-box;
         }
         
-        /* 베이스 절대 위치 정밀 조정 (대각선 길이 약 198px 기준) */
+        /* 베이스 절대 위치 정밀 조정 (다이아몬드 중심: bottom 100px, 반대각선 99px) */
         .base-home { 
-            bottom: 17px; left: 50%; margin-left: -13px; 
+            bottom: 1px; left: 50%; margin-left: -13px; margin-bottom: -13px;
             clip-path: polygon(0 0, 100% 0, 100% 50%, 50% 100%, 0 50%); /* 5각형 홈플레이트 */
         }
-        .base-1 { bottom: 116px; left: calc(50% + 99px); margin-left: -13px; transform: rotate(45deg); }
-        .base-2 { bottom: 215px; left: 50%; margin-left: -13px; transform: rotate(45deg); }
-        .base-3 { bottom: 116px; left: calc(50% - 99px); margin-left: -13px; transform: rotate(45deg); }
+        .base-1 { bottom: 100px; left: calc(50% + 99px); margin-left: -13px; margin-bottom: -13px; transform: rotate(45deg); }
+        .base-2 { bottom: 199px; left: 50%; margin-left: -13px; margin-bottom: -13px; transform: rotate(45deg); }
+        .base-3 { bottom: 100px; left: calc(50% - 99px); margin-left: -13px; margin-bottom: -13px; transform: rotate(45deg); }
         
         .base.on { background: #f1c40f; border-color: #d4ac0d; box-shadow: 0 0 10px #f1c40f; transform: rotate(45deg) scale(1.1); }
         .base-home.on { transform: scale(1.1); } /* 홈은 rotate 안함 */
@@ -904,9 +905,9 @@
                     <div style="background:#fff3cd; padding:15px; border-radius:10px; border:2px solid #ffeeba;">
                         <h4 style="margin:0 0 10px 0; color:#856404;">투구(문제 출제)를 선택하세요! 🧤</h4>
                         <div style="margin-bottom: 10px; background: white; padding: 10px; border-radius: 5px; display: flex; justify-content: center; align-items: center; gap: 15px; border: 1px solid #ddd;">
-                            <span style="font-size: 13px; font-weight: bold;">답변 방식 지정:</span>
-                            <label style="cursor:pointer; display: flex; align-items: center; gap: 5px;"><input type="radio" name="q-method" value="type" checked> ⌨️ 타자</label>
-                            <label style="cursor:pointer; display: flex; align-items: center; gap: 5px;"><input type="radio" name="q-method" value="speak"> 🎤 말하기</label>
+                            <span style="font-size: 13px; font-weight: bold; white-space: nowrap;">답변 방식 지정:</span>
+                            <label style="cursor:pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap;"><input type="radio" name="q-method" value="type" checked> ⌨️ 타자</label>
+                            <label style="cursor:pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap;"><input type="radio" name="q-method" value="speak"> 🎤 말하기</label>
                         </div>
                         <div style="max-height:160px; overflow-y:auto; border:1px solid #ddd; border-radius:5px; background:white; padding:5px;">
                             ${generateQuestionList(data.unitId)}
