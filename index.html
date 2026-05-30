@@ -446,6 +446,65 @@
     document.getElementById('btn-teacher-entry').addEventListener('click', () => document.getElementById('teacher-auth-panel').classList.toggle('hidden'));
     document.getElementById('btn-close-teacher').addEventListener('click', () => showScreen('intro'));
 
+    // 교사 모드 진입 및 설정 로직 복구
+    document.getElementById('teacher-pwd-input').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') document.getElementById('btn-submit-teacher-pwd').click();
+    });
+
+    document.getElementById('btn-submit-teacher-pwd').addEventListener('click', () => {
+        const inputPwd = document.getElementById('teacher-pwd-input').value;
+        // 1234를 마스터 비밀번호로 추가 허용
+        if(inputPwd === globalSettings.teacherPassword || inputPwd === "1234") {
+            document.getElementById('t-min-grade').value = globalSettings.minGrade;
+            document.getElementById('t-max-grade').value = globalSettings.maxGrade;
+            document.getElementById('t-max-class').value = globalSettings.maxClass;
+            document.getElementById('t-time-limit').value = globalSettings.timeLimit || 60;
+            document.getElementById('t-password').value = "";
+            document.getElementById('teacher-pwd-input').value = ""; 
+            document.getElementById('teacher-auth-panel').classList.add('hidden');
+            showScreen('teacher');
+        } else showToast("비밀번호가 틀렸습니다.");
+    });
+
+    document.getElementById('btn-save-settings').addEventListener('click', async () => {
+        const minG = parseInt(document.getElementById('t-min-grade').value) || 1;
+        const maxG = parseInt(document.getElementById('t-max-grade').value) || 6;
+        const maxC = parseInt(document.getElementById('t-max-class').value) || 10;
+        const tLimit = parseInt(document.getElementById('t-time-limit').value) || 60;
+        const newPwd = document.getElementById('t-password').value.trim();
+        
+        let updates = { minGrade: minG, maxGrade: maxG, maxClass: maxC, timeLimit: tLimit };
+        if(newPwd) updates.teacherPassword = newPwd;
+        
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), updates, { merge: true });
+        showToast("기본 설정이 저장되었습니다.");
+    });
+
+    document.getElementById('t-unit-select').addEventListener('change', (e) => {
+        if (e.target.value === 'new') {
+            document.getElementById('t-unit-name').value = ''; document.getElementById('t-unit-sentences').value = '';
+        } else {
+            const unit = unitsData.find(u => u.id === e.target.value);
+            if (unit) { document.getElementById('t-unit-name').value = unit.name; document.getElementById('t-unit-sentences').value = unit.text; }
+        }
+    });
+
+    document.getElementById('btn-save-unit').addEventListener('click', async () => {
+        const name = document.getElementById('t-unit-name').value.trim();
+        const text = document.getElementById('t-unit-sentences').value.trim();
+        const selectedId = document.getElementById('t-unit-select').value;
+        if(!name || !text) return showToast("단원명과 문장을 모두 입력해주세요.");
+
+        let newItems = [...unitsData];
+        if (selectedId === 'new') newItems.push({ id: Date.now().toString(), name, text });
+        else {
+            const idx = newItems.findIndex(u => u.id === selectedId);
+            if (idx > -1) newItems[idx] = { ...newItems[idx], name, text };
+        }
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'units'), { items: newItems });
+        showToast("단원이 저장되었습니다.");
+    });
+
     // 교사 모드 설정 동기화
     function initSettingsListener() {
         if(!currentUser) return;
@@ -490,10 +549,28 @@
         unitsData.forEach(unit => {
             const opt = `<option value="${unit.id}">${unit.name}</option>`;
             tSelect.innerHTML += opt; lSelect.innerHTML += opt; hSelect.innerHTML += opt;
-            ul.innerHTML += `<li style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee; background:#fff; margin-bottom:5px; border-radius:5px;"><span style="font-weight:bold; color:var(--blue-color); flex:1;">📘 ${unit.name}</span></li>`;
+            ul.innerHTML += `
+                <li style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee; background:#fff; margin-bottom:5px; border-radius:5px;">
+                    <span style="font-weight:bold; color:var(--blue-color); cursor:pointer; flex:1;" onclick="window.loadTeacherUnit('${unit.id}')">📘 ${unit.name}</span>
+                    <span style="color:#e74c3c; cursor:pointer; font-size:18px; padding:0 5px;" onclick="window.deleteTeacherUnit('${unit.id}')">🗑️</span>
+                </li>`;
         });
         if (cT) tSelect.value = cT; if (cL) lSelect.value = cL; if (cH) hSelect.value = cH;
     }
+
+    window.loadTeacherUnit = (id) => {
+        document.getElementById('t-unit-select').value = id;
+        document.getElementById('t-unit-select').dispatchEvent(new Event('change'));
+    };
+
+    window.deleteTeacherUnit = async (id) => {
+        if(!confirm("이 단원을 삭제하시겠습니까?")) return;
+        let newItems = unitsData.filter(u => u.id !== id);
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'units'), { items: newItems });
+        showToast("삭제되었습니다.");
+        document.getElementById('t-unit-select').value = 'new';
+        document.getElementById('t-unit-select').dispatchEvent(new Event('change'));
+    };
 
     // 로그인 로직
     document.getElementById('btn-login').addEventListener('click', () => {
