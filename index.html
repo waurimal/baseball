@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball 문장 챌린지 - 멀티플레이어</title>
+    <style>
+        :root {
+            --blue-color: #2980b9;
+            --red-color: #c0392b;
+            --bg-color: #e8f5e9; /* 잔디색 느낌의 배경 */
+            --field-color: #27ae60;
+            --dirt-color: #d35400;
+        }
+        
+        body { 
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+            text-align: center; 
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        input, textarea, select {
+            user-select: auto;
+            -webkit-user-select: auto;
+        }
+        
+        .main-wrapper { width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; }
+        
+        .container {
+            width: 100%; 
+            background: white;
+            padding: 25px 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        
+        h1 { font-size: 24px; margin-bottom: 20px; color: #2c3e50; }
+        
+        input, select, textarea { 
+            width: calc(100% - 24px); padding: 12px; margin: 8px 0; 
+            border: 1px solid #ddd; border-radius: 8px; font-size: 16px;
+            box-sizing: border-box; font-family: inherit;
+        }
+        textarea { font-size: 14px; resize: vertical; }
+        select { width: 100%; cursor: pointer; }
+        .select-group { display: flex; gap: 10px; width: 100%; }
+        .select-group select, .select-group div, .select-group input { flex: 1; margin:0; }
+        
+        button { 
+            width: 100%; padding: 14px; margin-top: 15px; cursor: pointer; 
+            background-color: #2c3e50; color: white; border: none; 
+            border-radius: 8px; font-size: 16px; font-weight: bold; transition: transform 0.1s, background 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+        .btn-blue { background-color: var(--blue-color); }
+        .btn-red { background-color: var(--red-color); }
+
+        /* 게임 화면 상단 정보 */
+        #game-info {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; padding: 10px; background: #34495e; border-radius: 8px; color: white;
+        }
+        .player-badge { padding: 5px 10px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+        .badge-blue { background-color: var(--blue-color); }
+        .badge-red { background-color: var(--red-color); }
+
+        #room-code-display { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+        
+        /* 야구 전광판 */
+        .scoreboard {
+            background-color: #111; color: white; padding: 10px; border-radius: 10px;
+            margin-bottom: 15px; font-family: 'Courier New', Courier, monospace;
+            border: 4px solid #555;
+        }
+        .score-table { width: 100%; border-collapse: collapse; text-align: center; }
+        .score-table th, .score-table td { border: 1px solid #333; padding: 5px; font-size: 16px; }
+        .score-table th { color: #f1c40f; }
+        .score-table .active-team { font-weight: bold; background-color: #333; }
+        
+        .inning-info { display: flex; justify-content: space-between; margin-top: 10px; font-size: 16px; font-weight: bold; color: #e74c3c; }
+        .outs { display: flex; gap: 5px; align-items: center; }
+        .out-dot { width: 12px; height: 12px; border-radius: 50%; background: #444; border: 1px solid #222; }
+        .out-dot.on { background: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
+
+        /* 야구장 다이아몬드 */
+        .field-container {
+            width: 100%; height: 180px; background: var(--field-color); border-radius: 10px;
+            position: relative; margin: 15px 0; border: 3px solid #1e8449; overflow: hidden;
+        }
+        .diamond {
+            width: 100px; height: 100px; background: var(--dirt-color);
+            position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%) rotate(45deg);
+        }
+        .base {
+            position: absolute; width: 22px; height: 22px; background: white; border: 2px solid #ddd;
+            transform: rotate(-45deg); z-index: 2; transition: all 0.3s;
+        }
+        /* 다이아몬드 내부 포지셔닝 */
+        .base-home { bottom: -10px; left: -10px; border-radius: 50% 50% 0 50%; }
+        .base-1 { top: -10px; right: -10px; }
+        .base-2 { top: -10px; left: -10px; }
+        .base-3 { bottom: -10px; left: -10px; } /* 회전된 상태에서의 좌표계 */
+        
+        /* 다이아몬드 밖 절대 포지션 적용용 래퍼 */
+        .base-wrapper-home { position:absolute; bottom: 15px; left: 50%; transform: translateX(-50%); }
+        .base-wrapper-1 { position:absolute; bottom: 65px; left: calc(50% + 50px); transform: translateX(-50%); }
+        .base-wrapper-2 { position:absolute; bottom: 115px; left: 50%; transform: translateX(-50%); }
+        .base-wrapper-3 { position:absolute; bottom: 65px; left: calc(50% - 50px); transform: translateX(-50%); }
+        
+        .base.on { background: #f1c40f; border-color: #d4ac0d; box-shadow: 0 0 10px #f1c40f; transform: rotate(-45deg) scale(1.2); }
+
+        /* 플레이 로그 */
+        #play-log {
+            background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px;
+            height: 80px; overflow-y: auto; padding: 10px; font-size: 13px; text-align: left;
+            margin-bottom: 10px;
+        }
+        .log-entry { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed #eee; }
+
+        /* 상호작용 패널 */
+        #interaction-panel { margin: 15px 0; }
+        .q-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; text-align: left; background:#fff; transition: background 0.2s; border-radius: 5px; margin-bottom: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .q-item:hover { background: #f1f8ff; border-left: 4px solid var(--blue-color); }
+
+        .overlay-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 10; border-radius: 15px;
+        }
+        .rps-btn { font-size: 40px; padding: 15px; margin: 10px; background: #eee; border: none; border-radius: 10px; cursor: pointer; transition: transform 0.2s; }
+        .rps-btn:hover { transform: scale(1.1); background: #ddd; }
+
+        .footer { margin-top: 15px; font-size: 11px; color: #999; text-align: center; line-height: 1.4; }
+        
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 8px; padding: 16px; position: fixed;
+            z-index: 999; left: 50%; bottom: 30px; transform: translateX(-50%);
+            font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        .hidden { display: none !important; }
+        table.hof-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size:14px; }
+        table.hof-table th, table.hof-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        table.hof-table th { background-color: #f2f2f2; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="container" id="loading-screen">
+        <h2>서버에 연결 중입니다...</h2>
+        <p>잠시만 기다려주세요.</p>
+    </div>
+
+    <!-- 0. 인트로 화면 -->
+    <div class="container hidden" id="intro-screen">
+        <h1 style="font-size: 28px; margin-bottom: 5px;">⚾ 실전 야구</h1>
+        <h2 style="font-size: 20px; color: #555; margin-top: 0;">문장 챌린지</h2>
+        <div style="margin-top: 30px;">
+            <button id="btn-go-login" class="btn-blue" style="font-size: 18px; padding: 20px;">🎮 플레이 볼!</button>
+            <button id="btn-go-hof" style="background-color: #f1c40f; color: #856404; font-size: 18px; padding: 20px;">🏆 명예의 전당 보기</button>
+        </div>
+    </div>
+
+    <!-- 1. 정보 입력 화면 -->
+    <div class="container hidden" id="login-screen">
+        <h1>선수 등록</h1>
+        <p>내 정보를 입력하고 구장에 입장하세요.</p>
+        <div class="select-group">
+            <select id="grade" required><option value="">학년 선택</option></select>
+            <select id="classNum" required><option value="">반 선택</option></select>
+        </div>
+        <input type="number" id="studentNum" placeholder="번호" required>
+        <input type="text" id="studentName" placeholder="이름" required>
+        <button id="btn-login" class="btn-blue">다음 단계로</button>
+        <button id="btn-back-intro" style="margin-top:10px; background-color:#95a5a6;">첫 화면으로</button>
+        
+        <button id="btn-teacher-entry" style="margin-top:15px; background:none; color:#999; border:none; font-size:13px; cursor:pointer; padding:0; width:auto; text-decoration:underline;">👨‍🏫 감독(교사) 설정 모드</button>
+        
+        <div id="teacher-auth-panel" class="hidden" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd;">
+            <input type="password" id="teacher-pwd-input" placeholder="비밀번호 입력">
+            <button id="btn-submit-teacher-pwd" class="btn-blue" style="padding: 10px; margin-top: 5px;">확인</button>
+        </div>
+    </div>
+
+    <!-- 교사 모드 화면 (기존과 동일) -->
+    <div class="container hidden" id="teacher-screen">
+        <h1>감독 설정 모드</h1>
+        <div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #eee;">
+            <h3 style="margin-top: 0; color: #2c3e50; font-size: 16px;">⚙️ 기본 및 보안 설정</h3>
+            <label style="font-weight:bold; font-size:13px; color:#555;">교사 모드 비밀번호</label>
+            <input type="text" id="t-password" placeholder="새 비밀번호 (입력 시 변경됨)">
+            <div class="select-group" style="margin-top:10px;">
+                <div><label style="font-weight:bold; font-size:13px; color:#555;">최소 학년</label><input type="number" id="t-min-grade" min="1" max="6"></div>
+                <div><label style="font-weight:bold; font-size:13px; color:#555;">최대 학년</label><input type="number" id="t-max-grade" min="1" max="6"></div>
+            </div>
+            <div class="select-group" style="margin-top:10px;">
+                <div><label style="font-weight:bold; font-size:13px; color:#555;">최대 반</label><input type="number" id="t-max-class" min="1" max="30"></div>
+                <div><label style="font-weight:bold; font-size:13px; color:#555;">문제 풀이 시간 (초)</label><input type="number" id="t-time-limit" min="10" max="300" value="60"></div>
+            </div>
+            <button id="btn-save-settings" class="btn-blue" style="margin-top: 15px; padding: 10px;">기본 설정 저장</button>
+        </div>
+
+        <div style="text-align: left; background: #eef2f5; padding: 15px; border-radius: 10px; border: 1px solid #dde3e8;">
+            <h3 style="margin-top: 0; color: #2c3e50; font-size: 16px;">📚 단원 및 문장 관리</h3>
+            <select id="t-unit-select"><option value="new">+ 새 단원 추가</option></select>
+            <input type="text" id="t-unit-name" placeholder="단원명 (예: 1단원. 인사하기)">
+            <textarea id="t-unit-sentences" rows="6" placeholder="영어문장 : 한국어뜻 (엔터로 구분)"></textarea>
+            <button id="btn-save-unit" class="btn-blue" style="margin-top:5px; padding:10px;">현재 작성된 단원 저장</button>
+            <div id="teacher-unit-list-container" style="margin-top:15px; border-top:1px dashed #b9c6d2; padding-top:15px;">
+                <h4 style="margin:0 0 10px 0; color:#555; font-size: 14px;">저장된 단원 목록</h4>
+                <ul id="teacher-unit-list" style="list-style:none; padding:0; margin:0; font-size:14px; max-height:120px; overflow-y:auto;"></ul>
+            </div>
+        </div>
+        <button id="btn-close-teacher" style="margin-top:15px; background-color:#95a5a6;">첫 화면으로</button>
+    </div>
+
+    <!-- 2. 대기실 -->
+    <div class="container hidden" id="lobby-screen">
+        <h1>야구장 대기실</h1>
+        <p id="lobby-greeting"></p>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h3>새로운 구장 만들기</h3>
+            <select id="create-room-unit" style="margin-bottom: 10px;"><option value="">단원 선택 (자유 문장)</option></select>
+            <button id="btn-create-room" class="btn-blue" style="margin-top:0;">방 만들기</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h3>구장 입장하기</h3>
+            <input type="text" id="join-room-code" placeholder="4자리 방 코드" maxlength="4">
+            <button id="btn-join-room" class="btn-red">입장하기</button>
+        </div>
+        <button id="btn-back-lobby" style="margin-top:15px; background-color:#95a5a6;">첫 화면으로</button>
+    </div>
+
+    <!-- 3. 게임 화면 (야구 버전) -->
+    <div class="container hidden" id="game-screen" style="position: relative;">
+        <div id="room-code-display">방 코드: <span id="current-room-id" style="color:var(--blue-color)">----</span></div>
+        
+        <div id="game-info">
+            <div id="player1-info" class="player-badge badge-blue">대기 중...</div>
+            <div style="font-weight: bold; font-size: 14px;" id="turn-status-text">경기 준비 중</div>
+            <div id="player2-info" class="player-badge badge-red" style="background-color: #ccc;">대기 중...</div>
+        </div>
+
+        <!-- 야구 전광판 -->
+        <div class="scoreboard">
+            <table class="score-table">
+                <tr>
+                    <th>Team</th>
+                    <th>1</th><th>2</th><th>3</th>
+                    <th style="color:#2ecc71;">R</th>
+                </tr>
+                <tr id="sb-blue-row">
+                    <td id="sb-blue-name">Blue</td>
+                    <td id="sb-b-1">-</td><td id="sb-b-2">-</td><td id="sb-b-3">-</td>
+                    <td id="sb-b-r" style="font-weight:bold; color:#2ecc71;">0</td>
+                </tr>
+                <tr id="sb-red-row">
+                    <td id="sb-red-name">Red</td>
+                    <td id="sb-r-1">-</td><td id="sb-r-2">-</td><td id="sb-r-3">-</td>
+                    <td id="sb-r-r" style="font-weight:bold; color:#2ecc71;">0</td>
+                </tr>
+            </table>
+            <div class="inning-info">
+                <div id="current-inning-text">1회 초</div>
+                <div class="outs">
+                    <span style="color:#fff; font-size:14px; font-weight:normal;">OUT</span>
+                    <div class="out-dot" id="out-1"></div>
+                    <div class="out-dot" id="out-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 야구장(다이아몬드) -->
+        <div class="field-container">
+            <div class="diamond"></div>
+            <!-- 1루, 2루, 3루, 홈베이스 표시 -->
+            <div class="base-wrapper-home"><div class="base base-home" id="base-0"></div></div>
+            <div class="base-wrapper-1"><div class="base base-1" id="base-1"></div></div>
+            <div class="base-wrapper-2"><div class="base base-2" id="base-2"></div></div>
+            <div class="base-wrapper-3"><div class="base base-3" id="base-3"></div></div>
+        </div>
+
+        <!-- 플레이 로그 -->
+        <div id="play-log">경기가 시작되었습니다!</div>
+
+        <!-- 문장 리스트 보기 버튼 -->
+        <button id="btn-toggle-sentences" style="margin-top:5px; margin-bottom:5px; background-color:#17a2b8; padding:8px; font-size:13px;">📖 이번 경기 문제 목록</button>
+        <div id="sentence-list-container" class="hidden" style="padding:10px; background:#fff; border:1px solid #17a2b8; border-radius:8px; text-align:left; font-size:13px; max-height:120px; overflow-y:auto; margin-bottom:10px;"></div>
+
+        <!-- 상호작용 패널 (문제 출제 / 입력) -->
+        <div id="interaction-panel"></div>
+
+        <button id="btn-leave" style="margin-top:15px; background-color:#95a5a6;">기권하고 나가기</button>
+
+        <!-- 오버레이: 가위바위보 -->
+        <div id="rps-overlay" class="overlay-screen hidden">
+            <h2 style="color:#2c3e50;">가위 바위 보!</h2>
+            <p style="color:#666; margin-bottom:20px;">이긴 사람이 선공/후공을 결정합니다.</p>
+            <div id="rps-buttons">
+                <button class="rps-btn" data-choice="rock">✊</button>
+                <button class="rps-btn" data-choice="paper">🖐️</button>
+                <button class="rps-btn" data-choice="scissors">✌️</button>
+            </div>
+            <div id="rps-status" style="margin-top:20px; font-weight:bold; font-size:18px;">선택을 기다리는 중...</div>
+        </div>
+
+        <!-- 오버레이: 선공/후공 선택 -->
+        <div id="order-choice-overlay" class="overlay-screen hidden">
+            <h2 style="color:#2c3e50;">가위바위보 승리!</h2>
+            <p style="color:#666; margin-bottom:20px;">공격 순서를 선택하세요.</p>
+            <div id="order-buttons">
+                <button class="btn-blue" style="width:120px; font-size:20px; margin: 10px;" data-order="first">선공 (초)</button>
+                <button class="btn-red" style="width:120px; font-size:20px; margin: 10px;" data-order="second">후공 (말)</button>
+            </div>
+            <div id="order-status" style="margin-top:20px; font-weight:bold; font-size:18px;">상대방이 순서를 선택 중입니다...</div>
+        </div>
+
+        <!-- 오버레이: 최종 승패 결과 -->
+        <div id="result-overlay" class="overlay-screen hidden">
+            <div id="result-icon" style="font-size: 80px; margin-bottom: 10px;">🏆</div>
+            <h1 id="result-title" style="font-size: 32px; margin: 0; color: #2c3e50;">경기 종료</h1>
+            <p id="result-desc" style="font-size: 18px; color: #666; margin-top: 10px;"></p>
+            <button id="btn-result-leave" class="btn-blue" style="width: 80%; margin-top: 30px;">대기실로 돌아가기</button>
+        </div>
+    </div>
+
+    <!-- 4. 명예의 전당 화면 -->
+    <div class="container hidden" id="hof-screen">
+        <h1 style="color:#856404;">🏆 야구 명예의 전당 🏆</h1>
+        <div class="select-group" style="margin-bottom:10px;">
+            <select id="hof-unit-filter"><option value="all">전체 단원 (총 승수)</option></select>
+        </div>
+        <div class="select-group" style="margin-bottom:15px;">
+            <select id="hof-grade-filter"><option value="all">전체 학년</option></select>
+            <select id="hof-class-filter"><option value="all">전체 반</option></select>
+        </div>
+        <div style="max-height: 40vh; overflow-y: auto;">
+            <table class="hof-table">
+                <thead><tr><th>순위</th><th>정보</th><th>이름</th><th>승리</th></tr></thead>
+                <tbody id="hof-tbody"><tr><td colspan="4">데이터를 불러오는 중...</td></tr></tbody>
+            </table>
+        </div>
+        <button id="btn-back-intro-hof" style="margin-top:20px; background-color:#95a5a6;">첫 화면으로</button>
+    </div>
+    
+    <div class="footer">
+        만든이: 곽현석(이의초등학교)<br>
+        Copyright © 2026 Eui Elementary School. All Rights Reserved.
+    </div>
+</div>
+
+<div id="toast">메시지</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, getDocs, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDGinyJXc0n39-E-mdWQlASRmOwSWgZeuI",
+        authDomain: "baseball-6f677.firebaseapp.com",
+        projectId: "baseball-6f677",
+        storageBucket: "baseball-6f677.firebasestorage.app",
+        messagingSenderId: "258235991761",
+        appId: "1:258235991761:web:eb7201c775bad0c46fe7f0",
+        measurementId: "G-SDC7FQ7L7B"
+    };
+    const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
+    
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const screens = {
+        intro: document.getElementById('intro-screen'),
+        login: document.getElementById('login-screen'),
+        teacher: document.getElementById('teacher-screen'),
+        lobby: document.getElementById('lobby-screen'),
+        game: document.getElementById('game-screen'),
+        hof: document.getElementById('hof-screen')
+    };
+    const toastEl = document.getElementById('toast');
+    const interactionPanel = document.getElementById('interaction-panel');
+
+    let currentUser = null, myUserInfo = {}, currentRoomId = "", unsubscribeRoom = null;
+    let amIPlayer1 = false; 
+    let globalSettings = { minGrade: 1, maxGrade: 6, maxClass: 10, teacherPassword: "1234", timeLimit: 60 }; 
+    let unitsData = [];
+    let timerInterval = null;
+    window.lastPhaseKey = "";
+
+    function showToast(message) {
+        toastEl.innerText = message; toastEl.className = "show";
+        setTimeout(() => { toastEl.className = toastEl.className.replace("show", ""); }, 3000);
+    }
+
+    function showScreen(screenName) {
+        Object.values(screens).forEach(s => s.classList.add('hidden'));
+        screens[screenName].classList.remove('hidden');
+    }
+
+    // 1. RULE 3: Auth Before Queries
+    const initAuth = async () => {
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
+            else await signInAnonymously(auth);
+        } catch (error) { showToast("서버 인증 실패"); }
+    };
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            initSettingsListener();
+            document.getElementById('loading-screen').classList.add('hidden');
+            showScreen('intro');
+        }
+    });
+    initAuth();
+
+    // 화면 이동 리스너
+    document.getElementById('btn-go-login').addEventListener('click', () => showScreen('login'));
+    document.getElementById('btn-go-hof').addEventListener('click', () => { showScreen('hof'); loadLeaderboard(); });
+    document.getElementById('btn-back-intro').addEventListener('click', () => showScreen('intro'));
+    document.getElementById('btn-back-intro-hof').addEventListener('click', () => showScreen('intro'));
+    document.getElementById('btn-back-lobby').addEventListener('click', () => showScreen('intro'));
+    document.getElementById('btn-teacher-entry').addEventListener('click', () => document.getElementById('teacher-auth-panel').classList.toggle('hidden'));
+    document.getElementById('btn-close-teacher').addEventListener('click', () => showScreen('intro'));
+
+    // 교사 모드 설정 동기화
+    function initSettingsListener() {
+        if(!currentUser) return;
+        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), (snap) => {
+            if(snap.exists()) globalSettings = { ...globalSettings, ...snap.data() };
+            updateDropdowns();
+        });
+        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'units'), (snap) => {
+            if(snap.exists()) unitsData = snap.data().items || [];
+            else unitsData = [];
+            updateUnitDropdowns();
+        });
+    }
+
+    function updateDropdowns() {
+        const selects = ['grade', 'hof-grade-filter'];
+        const classSelects = ['classNum', 'hof-class-filter'];
+        selects.forEach(id => {
+            const el = document.getElementById(id); if(!el) return;
+            const cur = el.value;
+            el.innerHTML = id.includes('hof') ? '<option value="all">전체 학년</option>' : '<option value="">학년 선택</option>';
+            for(let i = globalSettings.minGrade; i <= globalSettings.maxGrade; i++) el.innerHTML += `<option value="${i}">${i}학년</option>`;
+            if (cur) el.value = cur;
+        });
+        classSelects.forEach(id => {
+            const el = document.getElementById(id); if(!el) return;
+            const cur = el.value;
+            el.innerHTML = id.includes('hof') ? '<option value="all">전체 반</option>' : '<option value="">반 선택</option>';
+            for(let i = 1; i <= globalSettings.maxClass; i++) el.innerHTML += `<option value="${i}">${i}반</option>`;
+            if (cur) el.value = cur;
+        });
+    }
+
+    function updateUnitDropdowns() {
+        const tSelect = document.getElementById('t-unit-select'), lSelect = document.getElementById('create-room-unit'), hSelect = document.getElementById('hof-unit-filter');
+        const cT = tSelect.value, cL = lSelect.value, cH = hSelect.value;
+        tSelect.innerHTML = '<option value="new">+ 새 단원 추가 (비우기)</option>';
+        lSelect.innerHTML = '<option value="">단원 선택 (자유 문장)</option>';
+        hSelect.innerHTML = '<option value="all">전체 단원 (총 승수)</option>';
+        
+        const ul = document.getElementById('teacher-unit-list'); ul.innerHTML = '';
+        unitsData.forEach(unit => {
+            const opt = `<option value="${unit.id}">${unit.name}</option>`;
+            tSelect.innerHTML += opt; lSelect.innerHTML += opt; hSelect.innerHTML += opt;
+            ul.innerHTML += `<li style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee; background:#fff; margin-bottom:5px; border-radius:5px;"><span style="font-weight:bold; color:var(--blue-color); flex:1;">📘 ${unit.name}</span></li>`;
+        });
+        if (cT) tSelect.value = cT; if (cL) lSelect.value = cL; if (cH) hSelect.value = cH;
+    }
+
+    // 로그인 로직
+    document.getElementById('btn-login').addEventListener('click', () => {
+        const grade = document.getElementById('grade').value, classNum = document.getElementById('classNum').value;
+        const studentNum = document.getElementById('studentNum').value, name = document.getElementById('studentName').value;
+        if (!grade || !classNum || !studentNum || !name) return showToast("모든 정보를 선택/입력해주세요!");
+        myUserInfo = { grade, classNum, studentNum, name };
+        document.getElementById('lobby-greeting').innerText = `${grade}학년 ${classNum}반 ${name} 선수, 환영합니다!`;
+        showScreen('lobby');
+    });
+
+    // 방 생성 (야구 데이터 구조 적용)
+    document.getElementById('btn-create-room').addEventListener('click', async () => {
+        if (!currentUser) return;
+        const selectedUnitId = document.getElementById('create-room-unit').value;
+        const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        try {
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode), {
+                player1: myUserInfo, player2: null, status: "waiting", unitId: selectedUnitId,
+                inning: 1, half: "top", outs: 0, bases: [false, false, false],
+                score: { blue: 0, red: 0 },
+                inningScores: { blue: ["-","-","-"], red: ["-","-","-"] },
+                offense: null, turnPhase: "selecting_sentence", currentQuestion: null, log: []
+            });
+            amIPlayer1 = true;
+            enterGameRoom(roomCode);
+        } catch (e) { showToast("방 생성 실패"); }
+    });
+
+    document.getElementById('btn-join-room').addEventListener('click', async () => {
+        if (!currentUser) return;
+        const roomCode = document.getElementById('join-room-code').value.trim();
+        if (roomCode.length !== 4) return showToast("4자리 코드를 입력해주세요.");
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
+        const roomSnap = await getDoc(roomRef);
+        if (roomSnap.exists()) {
+            const data = roomSnap.data();
+            if (data.status === "waiting" && !data.player2) {
+                await updateDoc(roomRef, { player2: myUserInfo, status: "rps" });
+                amIPlayer1 = false;
+                enterGameRoom(roomCode);
+            } else showToast("이미 진행중이거나 꽉 찬 방입니다.");
+        } else showToast("존재하지 않는 방입니다.");
+    });
+
+    function enterGameRoom(roomCode) {
+        showScreen('game');
+        currentRoomId = roomCode;
+        document.getElementById('current-room-id').innerText = roomCode;
+        window.lastPhaseKey = "";
+        document.getElementById('result-overlay').classList.add('hidden');
+        if(timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        
+        unsubscribeRoom = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode), (snap) => {
+            if (snap.exists()) updateGameUI(snap.data());
+            else { showToast("방이 삭제되었습니다."); resetGame(); }
+        });
+    }
+
+    function updateGameUI(data) {
+        window.currentGameData = data;
+        window.myColor = amIPlayer1 ? "blue" : "red"; 
+
+        document.getElementById('player1-info').innerText = data.player1 ? data.player1.name : "대기 중...";
+        const p2Info = document.getElementById('player2-info');
+        if (data.player2) { p2Info.innerText = data.player2.name; p2Info.style.backgroundColor = "var(--red-color)"; } 
+        else { p2Info.innerText = "대기 중..."; p2Info.style.backgroundColor = "#ccc"; }
+
+        // 전광판 업데이트
+        document.getElementById('sb-blue-name').innerText = data.player1 ? data.player1.name.substring(0,3) : "Blue";
+        document.getElementById('sb-red-name').innerText = data.player2 ? data.player2.name.substring(0,3) : "Red";
+        
+        for(let i=0; i<3; i++) {
+            document.getElementById(`sb-b-${i+1}`).innerText = data.inningScores?.blue[i] !== undefined ? data.inningScores.blue[i] : "-";
+            document.getElementById(`sb-r-${i+1}`).innerText = data.inningScores?.red[i] !== undefined ? data.inningScores.red[i] : "-";
+        }
+        document.getElementById('sb-b-r').innerText = data.score?.blue || 0;
+        document.getElementById('sb-r-r').innerText = data.score?.red || 0;
+
+        document.getElementById('current-inning-text').innerText = `${data.inning}회 ${data.half === 'top' ? '초' : '말'}`;
+        document.getElementById('out-1').className = `out-dot ${data.outs > 0 ? 'on' : ''}`;
+        document.getElementById('out-2').className = `out-dot ${data.outs > 1 ? 'on' : ''}`;
+
+        // 다이아몬드 베이스 업데이트
+        const bases = data.bases || [false, false, false];
+        document.getElementById('base-1').className = `base base-1 ${bases[0] ? 'on' : ''}`;
+        document.getElementById('base-2').className = `base base-2 ${bases[1] ? 'on' : ''}`;
+        document.getElementById('base-3').className = `base base-3 ${bases[2] ? 'on' : ''}`;
+
+        // 로그 업데이트
+        const logHtml = (data.log || []).map(l => `<div class="log-entry">${l}</div>`).join('');
+        document.getElementById('play-log').innerHTML = logHtml || "경기가 시작되었습니다!";
+
+        const statusEl = document.getElementById('turn-status-text');
+        const rpsOverlay = document.getElementById('rps-overlay');
+        const orderOverlay = document.getElementById('order-choice-overlay');
+
+        if (data.status === "waiting") {
+            statusEl.innerText = "상대 대기중..."; interactionPanel.innerHTML = ""; rpsOverlay.classList.add('hidden'); orderOverlay.classList.add('hidden');
+            return;
+        } else if (data.status === "rps") {
+            statusEl.innerText = "선공 결정중"; interactionPanel.innerHTML = ""; rpsOverlay.classList.remove('hidden'); orderOverlay.classList.add('hidden');
+            const myChoice = amIPlayer1 ? data.p1Choice : data.p2Choice;
+            document.getElementById('rps-status').innerText = myChoice ? "상대의 선택 대기중..." : "가위바위보를 선택하세요!";
+            return;
+        } else if (data.status === "choosing_order") {
+            statusEl.innerText = "공격 순서 결정중"; interactionPanel.innerHTML = "";
+            rpsOverlay.classList.add('hidden'); orderOverlay.classList.remove('hidden');
+
+            const orderButtons = document.getElementById('order-buttons');
+            const orderStatus = document.getElementById('order-status');
+
+            if (data.rpsWinner === window.myColor) {
+                orderButtons.classList.remove('hidden');
+                orderStatus.innerText = "원하는 공격 순서를 선택하세요!";
+            } else {
+                orderButtons.classList.add('hidden');
+                orderStatus.innerText = "상대방이 공격 순서를 고민 중입니다...";
+            }
+            return;
+        } else {
+            rpsOverlay.classList.add('hidden');
+            orderOverlay.classList.add('hidden');
+        }
+        
+        if (data.status === "finished") {
+            interactionPanel.innerHTML = "";
+            if(timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            setTimeout(() => { showResultOverlay(data); }, 1500); 
+            statusEl.innerText = "경기 종료";
+            return;
+        }
+
+        // 턴 상태 관리 (수비 vs 공격)
+        const isMyTurn = (data.offense === window.myColor); // 내가 공격(푸는 쪽)인지 여부
+        
+        if (isMyTurn) {
+            statusEl.innerText = "⚾ 공격 (타석)";
+            document.getElementById(`player${amIPlayer1?1:2}-info`).style.boxShadow = "0 0 10px #f1c40f";
+        } else {
+            statusEl.innerText = "🧤 수비 (투구)";
+            document.getElementById(`player${amIPlayer1?2:1}-info`).style.boxShadow = "none";
+        }
+
+        const phaseKey = data.offense + "_" + data.turnPhase + "_" + (data.currentQuestion ? data.currentQuestion.ko : "");
+        if (window.lastPhaseKey !== phaseKey) {
+            window.lastPhaseKey = phaseKey;
+            renderInteractionPanel(data, isMyTurn, data.turnPhase);
+        }
+    }
+
+    // 가위바위보
+    document.querySelectorAll('.rps-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const data = window.currentGameData;
+            if (data.status !== "rps") return;
+            const choice = e.target.getAttribute('data-choice');
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+            
+            if (amIPlayer1 && !data.p1Choice) {
+                await updateDoc(roomRef, { p1Choice: choice }); checkRpsResult(choice, data.p2Choice, roomRef);
+            } else if (!amIPlayer1 && !data.p2Choice) {
+                await updateDoc(roomRef, { p2Choice: choice }); checkRpsResult(data.p1Choice, choice, roomRef);
+            }
+        });
+    });
+
+    async function checkRpsResult(p1, p2, roomRef) {
+        if (!p1 || !p2) return;
+        if (p1 === p2) {
+            showToast("비겼습니다! 다시 선택하세요.");
+            await updateDoc(roomRef, { p1Choice: null, p2Choice: null });
+            return;
+        }
+        let p1Wins = ((p1==='rock' && p2==='scissors') || (p1==='scissors' && p2==='paper') || (p1==='paper' && p2==='rock'));
+        const rpsWinner = p1Wins ? "blue" : "red";
+        
+        await updateDoc(roomRef, { 
+            status: "choosing_order", rpsWinner: rpsWinner
+        });
+        showToast(p1Wins ? "방장(Blue) 가위바위보 승리!" : "참여자(Red) 가위바위보 승리!");
+    }
+
+    document.querySelectorAll('#order-buttons button').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const data = window.currentGameData;
+            if (data.status !== "choosing_order" || data.rpsWinner !== window.myColor) return;
+            
+            const choice = e.target.getAttribute('data-order');
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+            
+            let firstOffense = (choice === "first") ? window.myColor : (window.myColor === "blue" ? "red" : "blue");
+            
+            await updateDoc(roomRef, { 
+                status: "playing", offense: firstOffense, turnPhase: "selecting_sentence",
+                log: [`경기 시작! ${firstOffense==='blue'?'Blue':'Red'}팀의 선공입니다.`]
+            });
+        });
+    });
+
+    function renderInteractionPanel(data, isMyTurnToAttack, phase) {
+        let html = "";
+        const timeLimit = globalSettings.timeLimit || 60;
+
+        // 내가 공격(푸는 쪽)일 때
+        if (isMyTurnToAttack) {
+            if (phase === 'selecting_sentence') {
+                html = `<div style="background:#fff3cd; color:#856404; padding:15px; border-radius:10px; font-weight:bold;">수비팀(투수)이 문제를 준비하고 있습니다... ⚾</div>`;
+            } else if (phase === 'answering') {
+                html = `
+                    <div style="background:#eef; padding:15px; border-radius:10px; border:2px solid var(--blue-color);">
+                        <div id="timer-display" style="font-size: 18px; font-weight: bold; color: #e67e22; margin-bottom: 10px;">⏳ 남은 시간: ${timeLimit}초</div>
+                        <h4 style="margin:0 0 10px 0; color:#2c3e50;">날아오는 공(문제)을 쳐내세요! 🦇</h4>
+                        <div style="font-size:20px; font-weight:bold; margin-bottom:15px; color:#E24A4A;">"${data.currentQuestion.ko}"</div>
+                        <input type="text" id="answer-input" placeholder="정확한 영문장 입력" autocomplete="off" spellcheck="false" style="margin-bottom:5px;">
+                        <button id="btn-submit-answer" class="btn-blue">타격하기 (제출)</button>
+                    </div>`;
+            }
+        } 
+        // 내가 수비(출제하는 쪽)일 때
+        else {
+            if (phase === 'selecting_sentence') {
+                html = `
+                    <div style="background:#fff3cd; padding:15px; border-radius:10px; border:2px solid #ffeeba;">
+                        <h4 style="margin:0 0 10px 0; color:#856404;">투구(문제 출제)를 선택하세요! 🧤</h4>
+                        <div style="max-height:160px; overflow-y:auto; border:1px solid #ddd; border-radius:5px; background:white; padding:5px;">
+                            ${generateQuestionList(data.unitId)}
+                        </div>
+                    </div>`;
+            } else if (phase === 'answering') {
+                html = `
+                    <div style="background:#eef; color:#2c3e50; padding:15px; border-radius:10px;">
+                        <div id="timer-display" style="font-size: 18px; font-weight: bold; color: #e67e22; margin-bottom: 10px;">⏳ 남은 시간: ${timeLimit}초</div>
+                        타자(상대)가 투구를 받아치는 중입니다... 💦<br><br>
+                        <span style="font-size:13px; color:#666;">던진 공: ${data.currentQuestion.ko}</span>
+                    </div>`;
+            }
+        }
+        interactionPanel.innerHTML = html;
+        if (phase === 'answering') startTimer(data.currentQuestion.startTime, timeLimit, isMyTurnToAttack, data);
+    }
+
+    function generateQuestionList(unitId) {
+        if (!unitId) return `
+            <div style="padding:10px; text-align:left;">
+                <input type="text" id="manual-en" placeholder="영어 정답 (예: I am happy)" style="padding:8px; font-size:14px;">
+                <input type="text" id="manual-ko" placeholder="한국어 문제 (예: 나는 행복하다)" style="padding:8px; margin-bottom:10px; font-size:14px;">
+                <button id="btn-send-manual" class="btn-blue">공 던지기</button>
+            </div>`;
+        const unit = unitsData.find(u => u.id === unitId);
+        if (!unit) return "<p>단원 없음</p>";
+        return unit.text.split('\n').filter(l => l.trim().includes(':')).map(line => {
+            const [en, ko] = line.split(':'); if(!en || !ko) return '';
+            return `<div class="q-item" data-en="${en.trim()}" data-ko="${ko.trim()}"><b>${ko.trim()}</b></div>`;
+        }).join('');
+    }
+
+    function startTimer(startTime, limit, isMyTurnToAttack, data) {
+        if (timerInterval) clearInterval(timerInterval);
+        const updateTick = () => {
+            const timerEl = document.getElementById('timer-display'); if (!timerEl) return;
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            let left = limit - elapsed;
+            if (left <= 0) {
+                left = 0; clearInterval(timerInterval); timerInterval = null;
+                timerEl.innerText = `⏳ 시간 초과!`; timerEl.style.color = 'red';
+                if (isMyTurnToAttack) processHitResult(false, data);
+            } else {
+                timerEl.innerText = `⏳ 남은 시간: ${left}초`;
+                if (left <= 10) timerEl.style.color = 'red';
+            }
+        };
+        updateTick();
+        timerInterval = setInterval(updateTick, 1000);
+    }
+
+    // 버튼 이벤트 처리
+    interactionPanel.addEventListener('click', async (e) => {
+        if (!window.currentGameData || !currentRoomId) return;
+        const data = window.currentGameData;
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+
+        // 수비: 문제 출제
+        const qItem = e.target.closest('.q-item');
+        if (qItem) {
+            const en = qItem.getAttribute('data-en'), ko = qItem.getAttribute('data-ko');
+            await updateDoc(roomRef, { turnPhase: 'answering', currentQuestion: { en, ko, startTime: Date.now() } });
+        }
+        if (e.target.id === 'btn-send-manual') {
+            const en = document.getElementById('manual-en').value.trim(), ko = document.getElementById('manual-ko').value.trim();
+            if(!en || !ko) return showToast("정답/문제를 모두 입력하세요.");
+            await updateDoc(roomRef, { turnPhase: 'answering', currentQuestion: { en, ko, startTime: Date.now() } });
+        }
+
+        // 공격: 정답 제출
+        if (e.target.id === 'btn-submit-answer') {
+            const userIn = document.getElementById('answer-input').value;
+            const correct = data.currentQuestion.en;
+            const norm = (s) => (s||"").toLowerCase().replace(/[^a-z0-9]/g, '');
+            const isCorrect = norm(userIn) === norm(correct);
+            processHitResult(isCorrect, data);
+        }
+    });
+
+    // 야구 로직 엔진
+    async function processHitResult(isCorrect, data) {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+        
+        let { inning, half, outs, bases, score, offense, log, inningScores } = data;
+        let newLog = [...log];
+        let runScoredOnThisPlay = 0;
+        let pName = myUserInfo.name;
+
+        if (isCorrect) {
+            // 정답을 맞추더라도 야구 룰에 따라 결과 랜덤 발생
+            const rand = Math.random() * 100;
+            let hitType = 1, hitName = "안타(1루타)";
+            
+            if (rand < 25) { hitType = 'OUT'; hitName = "아웃 (수비수 정면)"; } // 25% 확률 아웃
+            else if (rand < 40) { hitType = 'BB'; hitName = "볼넷"; } // 15% 확률 볼넷
+            else if (rand < 75) { hitType = 1; hitName = "1루타"; } // 35% 확률 1루타
+            else if (rand < 90) { hitType = 2; hitName = "2루타"; } // 15% 확률 2루타
+            else if (rand < 95) { hitType = 3; hitName = "3루타"; } // 5% 확률 3루타
+            else { hitType = 4; hitName = "홈런!! 🎆"; } // 5% 확률 홈런
+
+            if (hitType === 'OUT') {
+                showToast(`잘 맞은 타구! 하지만 ${hitName}!`);
+                newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${pName}: 정답! 👉 그러나 ${hitName}`);
+                outs++;
+            } else if (hitType === 'BB') {
+                showToast(`정답! ${hitName} 출루`);
+                newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${pName}: 정답! 👉 ${hitName} 출루!`);
+                // 볼넷 밀어내기 진루 계산
+                if (bases[0]) {
+                    if (bases[1]) {
+                        if (bases[2]) runScoredOnThisPlay++;
+                        bases[2] = true;
+                    }
+                    bases[1] = true;
+                }
+                bases[0] = true;
+            } else {
+                showToast(`정답! 깡! ${hitName}`);
+                newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${pName}: 정답! 👉 ${hitName} 타격!`);
+
+                // 안타 진루 계산
+                if (hitType === 4) { // 홈런
+                    runScoredOnThisPlay += bases.filter(b => b).length + 1;
+                    bases = [false, false, false];
+                } else {
+                    for(let i=2; i>=0; i--) {
+                        if(bases[i]) {
+                            if(i + hitType > 2) runScoredOnThisPlay++;
+                            else bases[i + hitType] = true;
+                            bases[i] = false;
+                        }
+                    }
+                    bases[hitType - 1] = true;
+                }
+            }
+        } else {
+            showToast("오답(또는 시간초과) -> 스트라이크 아웃!");
+            outs++;
+            newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${pName}: 오답/초과 👉 스트라이크 아웃!`);
+        }
+
+        // 점수 업데이트
+        if (runScoredOnThisPlay > 0) {
+            score[offense] += runScoredOnThisPlay;
+            let currentInningScore = inningScores[offense][inning-1];
+            inningScores[offense][inning-1] = (currentInningScore === "-" ? 0 : currentInningScore) + runScoredOnThisPlay;
+            newLog.unshift(`💡 ${offense==='blue'?'Blue':'Red'}팀 ${runScoredOnThisPlay}득점!`);
+        }
+
+        let status = "playing";
+        let winner = null;
+
+        // 공수 교대 체크
+        if (outs >= 3) {
+            newLog.unshift(`💥 3아웃! 공수 교대.`);
+            outs = 0;
+            bases = [false, false, false];
+            if (half === 'top') {
+                half = 'bottom'; offense = 'red';
+            } else {
+                half = 'top'; offense = 'blue'; inning++;
+            }
+            // 매 이닝 시작 시 0으로 초기화 표기
+            if(inning <= 3) inningScores[offense][inning-1] = 0;
+        }
+
+        // 게임 종료 조건 체크 (3이닝 초과 또는 3회말 끝내기)
+        if (inning > 3 || (inning === 3 && half === 'bottom' && score.red > score.blue)) {
+            status = 'finished';
+            if (score.blue > score.red) winner = 'blue';
+            else if (score.red > score.blue) winner = 'red';
+            else winner = 'draw';
+            newLog.unshift(`🏁 경기 종료!`);
+        }
+
+        if (newLog.length > 20) newLog = newLog.slice(0, 20); // 로그 길이 제한
+
+        const updates = {
+            inning, half, outs, bases, score, inningScores, offense, log: newLog,
+            turnPhase: 'selecting_sentence', currentQuestion: null,
+            status, winner
+        };
+
+        await updateDoc(roomRef, updates);
+        
+        // 승리 기록
+        if (status === 'finished' && winner === window.myColor) {
+            recordWin(data.unitId);
+        }
+    }
+
+    async function recordWin(unitId) {
+        const docId = `${myUserInfo.grade}_${myUserInfo.classNum}_${myUserInfo.studentNum}_${myUserInfo.name}`;
+        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', docId);
+        let updates = { grade: myUserInfo.grade, classNum: myUserInfo.classNum, studentNum: myUserInfo.studentNum, name: myUserInfo.name, totalWins: increment(1) };
+        if (unitId) updates[`unitWins.${unitId}`] = increment(1);
+        try { await setDoc(ref, updates, { merge: true }); } catch (e) { console.error(e); }
+    }
+
+    function showResultOverlay(data) {
+        const overlay = document.getElementById('result-overlay');
+        const title = document.getElementById('result-title');
+        const desc = document.getElementById('result-desc');
+        const icon = document.getElementById('result-icon');
+        
+        if (data.winner === "draw") {
+            title.innerText = "무승부!"; title.style.color = "#333";
+            desc.innerText = "치열한 연장전 끝에 무승부입니다."; icon.innerText = "🤝";
+        } else {
+            if (data.winner === window.myColor) {
+                title.innerText = "승리!"; title.style.color = "#27ae60";
+                desc.innerText = "축하합니다! 완벽한 승리입니다."; icon.innerText = "🏆";
+            } else {
+                title.innerText = "패배..."; title.style.color = "#c0392b";
+                desc.innerText = "수고하셨습니다. 다음 경기를 기약하세요!"; icon.innerText = "😢";
+            }
+        }
+        overlay.classList.remove('hidden');
+    }
+
+    document.getElementById('btn-result-leave').addEventListener('click', resetGame);
+    document.getElementById('btn-leave').addEventListener('click', resetGame);
+    
+    function resetGame() {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        if (unsubscribeRoom) { unsubscribeRoom(); unsubscribeRoom = null; }
+        currentRoomId = ""; window.myColor = ""; window.currentGameData = null; window.lastPhaseKey = "";
+        document.getElementById('result-overlay').classList.add('hidden');
+        showScreen('lobby');
+    }
+
+    // 2. RULE 2: No Complex Queries (명예의 전당 최적화)
+    async function loadLeaderboard() {
+        const tbody = document.getElementById('hof-tbody');
+        tbody.innerHTML = '<tr><td colspan="4">데이터를 불러오는 중...</td></tr>';
+        
+        const gFilter = document.getElementById('hof-grade-filter').value;
+        const cFilter = document.getElementById('hof-class-filter').value;
+        const uFilter = document.getElementById('hof-unit-filter').value;
+
+        const lbRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+        
+        try {
+            // 모든 기록을 가져온 뒤 JS에서 필터링 (복합 쿼리 방지)
+            const snap = await getDocs(lbRef);
+            let results = [];
+            
+            snap.forEach(doc => {
+                const d = doc.data();
+                
+                // 메모리 내 필터링 적용
+                if (gFilter !== 'all' && d.grade !== gFilter) return;
+                if (cFilter !== 'all' && d.classNum !== cFilter) return;
+
+                let wins = 0;
+                if (uFilter === 'all') wins = d.totalWins || 0;
+                else wins = (d.unitWins && d.unitWins[uFilter]) ? d.unitWins[uFilter] : 0;
+                
+                if (wins > 0) results.push({ ...d, sortWins: wins });
+            });
+
+            // 정렬
+            results.sort((a, b) => b.sortWins - a.sortWins);
+
+            if (results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">기록이 없습니다.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = results.map((r, i) => `
+                <tr>
+                    <td style="font-weight:bold; color:${i<3?'#d35400':'#333'}">${i+1}</td>
+                    <td>${r.grade}학년 ${r.classNum}반</td>
+                    <td>${r.name}</td>
+                    <td style="font-weight:bold; color:var(--blue-color)">${r.sortWins}승</td>
+                </tr>
+            `).join('');
+
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="4">데이터 오류</td></tr>';
+            console.error(e);
+        }
+    }
+
+    document.getElementById('btn-toggle-sentences').addEventListener('click', () => {
+        document.getElementById('sentence-list-container').classList.toggle('hidden');
+    });
+    
+    document.getElementById('hof-grade-filter').addEventListener('change', loadLeaderboard);
+    document.getElementById('hof-class-filter').addEventListener('change', loadLeaderboard);
+    document.getElementById('hof-unit-filter').addEventListener('change', loadLeaderboard);
+
+</script>
+</body>
+</html>
