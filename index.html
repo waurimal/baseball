@@ -34,7 +34,7 @@
             -webkit-user-select: auto;
         }
         
-        .main-wrapper { width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; }
+        .main-wrapper { width: 100%; max-width: 650px; display: flex; flex-direction: column; align-items: center; }
         
         .container {
             width: 100%; 
@@ -68,7 +68,6 @@
         .btn-blue { background-color: var(--blue-color); }
         .btn-red { background-color: var(--red-color); }
 
-        /* 게임 화면 상단 정보 */
         #game-info {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 10px; padding: 10px; background: #34495e; border-radius: 8px; color: white;
@@ -79,7 +78,6 @@
 
         #room-code-display { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
         
-        /* 야구 전광판 */
         .scoreboard {
             background-color: #111; color: white; padding: 10px; border-radius: 10px;
             margin-bottom: 15px; font-family: 'Courier New', Courier, monospace;
@@ -88,49 +86,57 @@
         .score-table { width: 100%; border-collapse: collapse; text-align: center; }
         .score-table th, .score-table td { border: 1px solid #333; padding: 5px; font-size: 16px; }
         .score-table th { color: #f1c40f; }
-        .score-table .active-team { font-weight: bold; background-color: #333; }
         
-        .inning-info { display: flex; justify-content: space-between; margin-top: 10px; font-size: 16px; font-weight: bold; color: #e74c3c; }
+        .inning-info { display: flex; justify-content: space-between; margin-top: 10px; font-size: 16px; font-weight: bold; color: #e74c3c; align-items: center; }
         .outs { display: flex; gap: 5px; align-items: center; }
         .out-dot { width: 12px; height: 12px; border-radius: 50%; background: #444; border: 1px solid #222; }
         .out-dot.on { background: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
 
-        /* 야구장 다이아몬드 */
         .field-container {
-            width: 100%; height: 180px; background: var(--field-color); border-radius: 10px;
+            width: 100%; height: 260px; background: var(--field-color); border-radius: 10px;
             position: relative; margin: 15px 0; border: 3px solid #1e8449; overflow: hidden;
         }
         .diamond {
-            width: 100px; height: 100px; background: var(--dirt-color);
-            position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%) rotate(45deg);
+            width: 130px; height: 130px; background: var(--dirt-color);
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%) rotate(45deg);
         }
         .base {
-            position: absolute; width: 22px; height: 22px; background: white; border: 2px solid #ddd;
+            position: absolute; width: 26px; height: 26px; background: white; border: 2px solid #ddd;
             transform: rotate(-45deg); z-index: 2; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
         }
-        /* 다이아몬드 내부 포지셔닝 */
-        .base-home { bottom: -10px; left: -10px; border-radius: 50% 50% 0 50%; }
-        .base-1 { top: -10px; right: -10px; }
-        .base-2 { top: -10px; left: -10px; }
-        .base-3 { bottom: -10px; left: -10px; } /* 회전된 상태에서의 좌표계 */
+        /* 홈베이스 모양 */
+        .base-home { bottom: -13px; left: -13px; border-radius: 50% 50% 0 50%; }
         
-        /* 다이아몬드 밖 절대 포지션 적용용 래퍼 */
-        .base-wrapper-home { position:absolute; bottom: 15px; left: 50%; transform: translateX(-50%); }
-        .base-wrapper-1 { position:absolute; bottom: 65px; left: calc(50% + 50px); transform: translateX(-50%); }
-        .base-wrapper-2 { position:absolute; bottom: 115px; left: 50%; transform: translateX(-50%); }
-        .base-wrapper-3 { position:absolute; bottom: 65px; left: calc(50% - 50px); transform: translateX(-50%); }
+        /* 절대 포지션 래퍼를 통한 정밀한 위치 조정 */
+        .base-wrapper-home { position:absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 3;}
+        .base-wrapper-1 { position:absolute; bottom: 90px; left: calc(50% + 65px); transform: translateX(-50%); z-index: 3;}
+        .base-wrapper-2 { position:absolute; bottom: 155px; left: 50%; transform: translateX(-50%); z-index: 3;}
+        .base-wrapper-3 { position:absolute; bottom: 90px; left: calc(50% - 65px); transform: translateX(-50%); z-index: 3;}
         
-        .base.on { background: #f1c40f; border-color: #d4ac0d; box-shadow: 0 0 10px #f1c40f; transform: rotate(-45deg) scale(1.2); }
+        .base.on { background: #f1c40f; border-color: #d4ac0d; box-shadow: 0 0 10px #f1c40f; transform: rotate(-45deg) scale(1.1); }
 
-        /* 플레이 로그 */
+        /* 주자(캐릭터) 애니메이션 효과 */
+        .runner-emoji {
+            position: absolute;
+            transform: rotate(45deg) translate(-2px, -18px);
+            font-size: 28px;
+            z-index: 10;
+            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
+            animation: runnerBounce 0.3s infinite alternate;
+        }
+        @keyframes runnerBounce {
+            from { transform: rotate(45deg) translate(-2px, -18px); }
+            to { transform: rotate(45deg) translate(-2px, -23px); }
+        }
+
         #play-log {
             background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px;
-            height: 80px; overflow-y: auto; padding: 10px; font-size: 13px; text-align: left;
-            margin-bottom: 10px;
+            height: 100px; overflow-y: auto; padding: 10px; font-size: 13px; text-align: left;
+            margin-bottom: 10px; line-height: 1.5;
         }
         .log-entry { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed #eee; }
 
-        /* 상호작용 패널 */
         #interaction-panel { margin: 15px 0; }
         .q-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; text-align: left; background:#fff; transition: background 0.2s; border-radius: 5px; margin-bottom: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .q-item:hover { background: #f1f8ff; border-left: 4px solid var(--blue-color); }
@@ -142,6 +148,20 @@
         }
         .rps-btn { font-size: 40px; padding: 15px; margin: 10px; background: #eee; border: none; border-radius: 10px; cursor: pointer; transition: transform 0.2s; }
         .rps-btn:hover { transform: scale(1.1); background: #ddd; }
+
+        #hit-result-overlay {
+            background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .hit-anim-text {
+            font-size: 50px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px #e67e22;
+            animation: hitZoom 0.5s ease-out forwards;
+        }
+        @keyframes hitZoom {
+            0% { transform: scale(0.2); opacity: 0; }
+            70% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
         .footer { margin-top: 15px; font-size: 11px; color: #999; text-align: center; line-height: 1.4; }
         
@@ -171,7 +191,7 @@
 
     <!-- 0. 인트로 화면 -->
     <div class="container hidden" id="intro-screen">
-        <h1 style="font-size: 28px; margin-bottom: 5px;">⚾ 실전 야구</h1>
+        <h1 style="font-size: 32px; margin-bottom: 5px;">⚾ 실전 야구</h1>
         <h2 style="font-size: 20px; color: #555; margin-top: 0;">문장 챌린지</h2>
         <div style="margin-top: 30px;">
             <button id="btn-go-login" class="btn-blue" style="font-size: 18px; padding: 20px;">🎮 플레이 볼!</button>
@@ -200,7 +220,6 @@
         </div>
     </div>
 
-    <!-- 교사 모드 화면 (기존과 동일) -->
     <div class="container hidden" id="teacher-screen">
         <h1>감독 설정 모드</h1>
         <div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #eee;">
@@ -257,7 +276,7 @@
         
         <div id="game-info">
             <div id="player1-info" class="player-badge badge-blue">대기 중...</div>
-            <div style="font-weight: bold; font-size: 14px;" id="turn-status-text">경기 준비 중</div>
+            <div style="font-weight: bold; font-size: 15px; text-shadow: 1px 1px 2px #000;" id="turn-status-text">경기 준비 중</div>
             <div id="player2-info" class="player-badge badge-red" style="background-color: #ccc;">대기 중...</div>
         </div>
 
@@ -265,9 +284,7 @@
         <div class="scoreboard">
             <table class="score-table">
                 <tr>
-                    <th>Team</th>
-                    <th>1</th><th>2</th><th>3</th>
-                    <th style="color:#2ecc71;">R</th>
+                    <th>Team</th><th>1</th><th>2</th><th>3</th><th style="color:#2ecc71;">R</th>
                 </tr>
                 <tr id="sb-blue-row">
                     <td id="sb-blue-name">Blue</td>
@@ -282,6 +299,7 @@
             </table>
             <div class="inning-info">
                 <div id="current-inning-text">1회 초</div>
+                <div id="current-batter-info" style="color:#f1c40f; font-size:14px;"></div>
                 <div class="outs">
                     <span style="color:#fff; font-size:14px; font-weight:normal;">OUT</span>
                     <div class="out-dot" id="out-1"></div>
@@ -290,7 +308,6 @@
             </div>
         </div>
 
-        <!-- 야구장(다이아몬드) -->
         <div class="field-container">
             <div class="diamond"></div>
             <!-- 1루, 2루, 3루, 홈베이스 표시 -->
@@ -304,7 +321,7 @@
         <div id="play-log">경기가 시작되었습니다!</div>
 
         <!-- 문장 리스트 보기 버튼 -->
-        <button id="btn-toggle-sentences" style="margin-top:5px; margin-bottom:5px; background-color:#17a2b8; padding:8px; font-size:13px;">📖 이번 경기 문제 목록</button>
+        <button id="btn-toggle-sentences" style="margin-top:5px; margin-bottom:5px; background-color:#17a2b8; padding:8px; font-size:13px;">📖 이번 경기 출제 문장 목록</button>
         <div id="sentence-list-container" class="hidden" style="padding:10px; background:#fff; border:1px solid #17a2b8; border-radius:8px; text-align:left; font-size:13px; max-height:120px; overflow-y:auto; margin-bottom:10px;"></div>
 
         <!-- 상호작용 패널 (문제 출제 / 입력) -->
@@ -315,7 +332,7 @@
         <!-- 오버레이: 가위바위보 -->
         <div id="rps-overlay" class="overlay-screen hidden">
             <h2 style="color:#2c3e50;">가위 바위 보!</h2>
-            <p style="color:#666; margin-bottom:20px;">이긴 사람이 선공/후공을 결정합니다.</p>
+            <p style="color:#666; margin-bottom:20px;">이긴 사람이 선/후공을 결정합니다.</p>
             <div id="rps-buttons">
                 <button class="rps-btn" data-choice="rock">✊</button>
                 <button class="rps-btn" data-choice="paper">🖐️</button>
@@ -324,15 +341,19 @@
             <div id="rps-status" style="margin-top:20px; font-weight:bold; font-size:18px;">선택을 기다리는 중...</div>
         </div>
 
-        <!-- 오버레이: 선공/후공 선택 -->
-        <div id="order-choice-overlay" class="overlay-screen hidden">
-            <h2 style="color:#2c3e50;">가위바위보 승리!</h2>
-            <p style="color:#666; margin-bottom:20px;">공격 순서를 선택하세요.</p>
-            <div id="order-buttons">
-                <button class="btn-blue" style="width:120px; font-size:20px; margin: 10px;" data-order="first">선공 (초)</button>
-                <button class="btn-red" style="width:120px; font-size:20px; margin: 10px;" data-order="second">후공 (말)</button>
+        <!-- 오버레이: 가위바위보 승자 선후공 선택 -->
+        <div id="rps-choice-overlay" class="overlay-screen hidden">
+            <h2 style="color:#2c3e50;">🎉 승리!</h2>
+            <p style="color:#666; margin-bottom:20px;">공격을 먼저 시작할지 선택하세요.</p>
+            <div>
+                <button id="btn-choice-first" class="btn-blue" style="margin:5px; width:auto; padding:15px 30px;">방망이 먼저 (1회초 선공)</button>
+                <button id="btn-choice-second" class="btn-red" style="margin:5px; width:auto; padding:15px 30px;">글러브 먼저 (1회말 후공)</button>
             </div>
-            <div id="order-status" style="margin-top:20px; font-weight:bold; font-size:18px;">상대방이 순서를 선택 중입니다...</div>
+        </div>
+
+        <!-- 오버레이: 타격 결과 (애니메이션 연출용) -->
+        <div id="hit-result-overlay" class="overlay-screen hidden">
+            <div id="hit-anim-container" class="hit-anim-text">홈런!</div>
         </div>
 
         <!-- 오버레이: 최종 승패 결과 -->
@@ -419,7 +440,6 @@
         screens[screenName].classList.remove('hidden');
     }
 
-    // 1. RULE 3: Auth Before Queries
     const initAuth = async () => {
         try {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
@@ -446,15 +466,16 @@
     document.getElementById('btn-teacher-entry').addEventListener('click', () => document.getElementById('teacher-auth-panel').classList.toggle('hidden'));
     document.getElementById('btn-close-teacher').addEventListener('click', () => showScreen('intro'));
 
-    // 교사 모드 진입 및 설정 로직 복구
+    // 교사 모드 진입 및 설정 로직
     document.getElementById('teacher-pwd-input').addEventListener('keypress', (e) => {
         if(e.key === 'Enter') document.getElementById('btn-submit-teacher-pwd').click();
     });
 
     document.getElementById('btn-submit-teacher-pwd').addEventListener('click', () => {
         const inputPwd = document.getElementById('teacher-pwd-input').value;
-        // 1234를 마스터 비밀번호로 추가 허용
-        if(inputPwd === globalSettings.teacherPassword || inputPwd === "1234") {
+        const expectedPwd = globalSettings.teacherPassword || "1234"; // 초기 비번 1234
+        
+        if(inputPwd === expectedPwd) {
             document.getElementById('t-min-grade').value = globalSettings.minGrade;
             document.getElementById('t-max-grade').value = globalSettings.maxGrade;
             document.getElementById('t-max-class').value = globalSettings.maxClass;
@@ -505,7 +526,6 @@
         showToast("단원이 저장되었습니다.");
     });
 
-    // 교사 모드 설정 동기화
     function initSettingsListener() {
         if(!currentUser) return;
         onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), (snap) => {
@@ -572,17 +592,22 @@
         document.getElementById('t-unit-select').dispatchEvent(new Event('change'));
     };
 
-    // 로그인 로직
+    // 로그인 및 이름 욕설 필터
     document.getElementById('btn-login').addEventListener('click', () => {
         const grade = document.getElementById('grade').value, classNum = document.getElementById('classNum').value;
         const studentNum = document.getElementById('studentNum').value, name = document.getElementById('studentName').value;
         if (!grade || !classNum || !studentNum || !name) return showToast("모든 정보를 선택/입력해주세요!");
+        
+        const bannedWords = ['시발', '씨발', '병신', '개새끼', '좆', '지랄', '미친', '새끼', '존나', '씹', '애미', '애비', '니미', '염병', '호로', 'fuck', 'shit', 'bitch', 'tlqkf', 'Tlqkf', 'qudtls', 'rotoRL', 'whw', 'wlfkf', 'alcls', 'toRL', 'whssk', 'Tlq', 'doal', 'doql', 'slal', 'duaqud', 'ghfh'];
+        if (bannedWords.some(word => name.includes(word))) {
+            return showToast("이름에 올바르지 않은 단어가 포함되어 있습니다.");
+        }
+
         myUserInfo = { grade, classNum, studentNum, name };
         document.getElementById('lobby-greeting').innerText = `${grade}학년 ${classNum}반 ${name} 선수, 환영합니다!`;
         showScreen('lobby');
     });
 
-    // 방 생성 (야구 데이터 구조 적용)
     document.getElementById('btn-create-room').addEventListener('click', async () => {
         if (!currentUser) return;
         const selectedUnitId = document.getElementById('create-room-unit').value;
@@ -593,7 +618,8 @@
                 inning: 1, half: "top", outs: 0, bases: [false, false, false],
                 score: { blue: 0, red: 0 },
                 inningScores: { blue: ["-","-","-"], red: ["-","-","-"] },
-                offense: null, turnPhase: "selecting_sentence", currentQuestion: null, log: []
+                offense: null, turnPhase: "selecting_sentence", currentQuestion: null, log: [],
+                batters: { blue: 1, red: 1 } // 타순 추가
             });
             amIPlayer1 = true;
             enterGameRoom(roomCode);
@@ -622,6 +648,7 @@
         document.getElementById('current-room-id').innerText = roomCode;
         window.lastPhaseKey = "";
         document.getElementById('result-overlay').classList.add('hidden');
+        document.getElementById('hit-result-overlay').classList.add('hidden');
         if(timerInterval) { clearInterval(timerInterval); timerInterval = null; }
         
         unsubscribeRoom = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode), (snap) => {
@@ -653,12 +680,22 @@
         document.getElementById('current-inning-text').innerText = `${data.inning}회 ${data.half === 'top' ? '초' : '말'}`;
         document.getElementById('out-1').className = `out-dot ${data.outs > 0 ? 'on' : ''}`;
         document.getElementById('out-2').className = `out-dot ${data.outs > 1 ? 'on' : ''}`;
+        
+        // 타자 번호 표시
+        if (data.offense && data.batters) {
+            document.getElementById('current-batter-info').innerText = `${data.batters[data.offense]}번 타자 타석`;
+        } else {
+            document.getElementById('current-batter-info').innerText = "";
+        }
 
-        // 다이아몬드 베이스 업데이트
+        // 다이아몬드 베이스 업데이트 및 주자 캐릭터 렌더링
         const bases = data.bases || [false, false, false];
         document.getElementById('base-1').className = `base base-1 ${bases[0] ? 'on' : ''}`;
+        document.getElementById('base-1').innerHTML = bases[0] ? '<div class="runner-emoji">🏃</div>' : '';
         document.getElementById('base-2').className = `base base-2 ${bases[1] ? 'on' : ''}`;
+        document.getElementById('base-2').innerHTML = bases[1] ? '<div class="runner-emoji">🏃</div>' : '';
         document.getElementById('base-3').className = `base base-3 ${bases[2] ? 'on' : ''}`;
+        document.getElementById('base-3').innerHTML = bases[2] ? '<div class="runner-emoji">🏃</div>' : '';
 
         // 로그 업데이트
         const logHtml = (data.log || []).map(l => `<div class="log-entry">${l}</div>`).join('');
@@ -666,36 +703,53 @@
 
         const statusEl = document.getElementById('turn-status-text');
         const rpsOverlay = document.getElementById('rps-overlay');
-        const orderOverlay = document.getElementById('order-choice-overlay');
+        const rpsChoiceOverlay = document.getElementById('rps-choice-overlay');
+        const hitResultOverlay = document.getElementById('hit-result-overlay');
 
         if (data.status === "waiting") {
-            statusEl.innerText = "상대 대기중..."; interactionPanel.innerHTML = ""; rpsOverlay.classList.add('hidden'); orderOverlay.classList.add('hidden');
+            statusEl.innerText = "상대 대기중..."; interactionPanel.innerHTML = ""; rpsOverlay.classList.add('hidden');
             return;
         } else if (data.status === "rps") {
-            statusEl.innerText = "선공 결정중"; interactionPanel.innerHTML = ""; rpsOverlay.classList.remove('hidden'); orderOverlay.classList.add('hidden');
+            statusEl.innerText = "선공 결정중"; interactionPanel.innerHTML = ""; rpsOverlay.classList.remove('hidden'); rpsChoiceOverlay.classList.add('hidden');
             const myChoice = amIPlayer1 ? data.p1Choice : data.p2Choice;
             document.getElementById('rps-status').innerText = myChoice ? "상대의 선택 대기중..." : "가위바위보를 선택하세요!";
             return;
-        } else if (data.status === "choosing_order") {
-            statusEl.innerText = "공격 순서 결정중"; interactionPanel.innerHTML = "";
-            rpsOverlay.classList.add('hidden'); orderOverlay.classList.remove('hidden');
-
-            const orderButtons = document.getElementById('order-buttons');
-            const orderStatus = document.getElementById('order-status');
-
-            if (data.rpsWinner === window.myColor) {
-                orderButtons.classList.remove('hidden');
-                orderStatus.innerText = "원하는 공격 순서를 선택하세요!";
+        } else if (data.status === "rps_choice") {
+            statusEl.innerText = "가위바위보 결과 처리중"; interactionPanel.innerHTML = ""; rpsOverlay.classList.add('hidden');
+            rpsChoiceOverlay.classList.remove('hidden');
+            
+            // 승자에게만 버튼 활성화
+            if (window.myColor === data.rpsWinner) {
+                rpsChoiceOverlay.querySelector('p').innerText = "공격을 먼저 시작할지 선택하세요.";
+                document.getElementById('btn-choice-first').style.display = 'inline-block';
+                document.getElementById('btn-choice-second').style.display = 'inline-block';
             } else {
-                orderButtons.classList.add('hidden');
-                orderStatus.innerText = "상대방이 공격 순서를 고민 중입니다...";
+                rpsChoiceOverlay.querySelector('p').innerText = "상대방이 선/후공을 고민중입니다...";
+                document.getElementById('btn-choice-first').style.display = 'none';
+                document.getElementById('btn-choice-second').style.display = 'none';
             }
             return;
         } else {
             rpsOverlay.classList.add('hidden');
-            orderOverlay.classList.add('hidden');
+            rpsChoiceOverlay.classList.add('hidden');
         }
         
+        // 타격 결과 지연 애니메이션 연출 상태
+        if (data.turnPhase === 'showing_result' && data.currentHit) {
+            interactionPanel.innerHTML = "";
+            hitResultOverlay.classList.remove('hidden');
+            const hitTextEl = document.getElementById('hit-anim-container');
+            hitTextEl.innerText = data.currentHit.text;
+            // 색상 조절
+            if(data.currentHit.isOut) hitTextEl.style.color = "#e74c3c";
+            else if(data.currentHit.isWalk) hitTextEl.style.color = "#3498db";
+            else hitTextEl.style.color = "#f1c40f";
+            
+            return; // 렌더링 중지 (DB에서 상태가 바뀔때까지 대기)
+        } else {
+            hitResultOverlay.classList.add('hidden');
+        }
+
         if (data.status === "finished") {
             interactionPanel.innerHTML = "";
             if(timerInterval) { clearInterval(timerInterval); timerInterval = null; }
@@ -709,10 +763,14 @@
         
         if (isMyTurn) {
             statusEl.innerText = "⚾ 공격 (타석)";
+            statusEl.style.color = "#f1c40f";
             document.getElementById(`player${amIPlayer1?1:2}-info`).style.boxShadow = "0 0 10px #f1c40f";
+            document.getElementById(`player${amIPlayer1?2:1}-info`).style.boxShadow = "none";
         } else {
             statusEl.innerText = "🧤 수비 (투구)";
-            document.getElementById(`player${amIPlayer1?2:1}-info`).style.boxShadow = "none";
+            statusEl.style.color = "#ecf0f1";
+            document.getElementById(`player${amIPlayer1?2:1}-info`).style.boxShadow = "0 0 10px #f1c40f";
+            document.getElementById(`player${amIPlayer1?1:2}-info`).style.boxShadow = "none";
         }
 
         const phaseKey = data.offense + "_" + data.turnPhase + "_" + (data.currentQuestion ? data.currentQuestion.ko : "");
@@ -722,7 +780,6 @@
         }
     }
 
-    // 가위바위보
     document.querySelectorAll('.rps-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const data = window.currentGameData;
@@ -746,28 +803,27 @@
             return;
         }
         let p1Wins = ((p1==='rock' && p2==='scissors') || (p1==='scissors' && p2==='paper') || (p1==='paper' && p2==='rock'));
-        const rpsWinner = p1Wins ? "blue" : "red";
+        const rpsWinner = p1Wins ? "blue" : "red"; 
         
-        await updateDoc(roomRef, { 
-            status: "choosing_order", rpsWinner: rpsWinner
-        });
-        showToast(p1Wins ? "방장(Blue) 가위바위보 승리!" : "참여자(Red) 가위바위보 승리!");
+        await updateDoc(roomRef, { status: "rps_choice", rpsWinner: rpsWinner });
     }
 
-    document.querySelectorAll('#order-buttons button').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const data = window.currentGameData;
-            if (data.status !== "choosing_order" || data.rpsWinner !== window.myColor) return;
-            
-            const choice = e.target.getAttribute('data-order');
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-            
-            let firstOffense = (choice === "first") ? window.myColor : (window.myColor === "blue" ? "red" : "blue");
-            
-            await updateDoc(roomRef, { 
-                status: "playing", offense: firstOffense, turnPhase: "selecting_sentence",
-                log: [`경기 시작! ${firstOffense==='blue'?'Blue':'Red'}팀의 선공입니다.`]
-            });
+    document.getElementById('btn-choice-first').addEventListener('click', async () => {
+        if(!window.currentGameData || window.currentGameData.rpsWinner !== window.myColor) return;
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+        await updateDoc(roomRef, {
+            status: "playing", offense: window.myColor, half: 'top', turnPhase: "selecting_sentence",
+            log: [`경기 시작! ${window.myColor==='blue'?'Blue':'Red'}팀의 선공입니다.`]
+        });
+    });
+    
+    document.getElementById('btn-choice-second').addEventListener('click', async () => {
+        if(!window.currentGameData || window.currentGameData.rpsWinner !== window.myColor) return;
+        const opponentColor = window.myColor === 'blue' ? 'red' : 'blue';
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+        await updateDoc(roomRef, {
+            status: "playing", offense: opponentColor, half: 'top', turnPhase: "selecting_sentence",
+            log: [`경기 시작! ${opponentColor==='blue'?'Blue':'Red'}팀의 선공입니다.`]
         });
     });
 
@@ -775,27 +831,42 @@
         let html = "";
         const timeLimit = globalSettings.timeLimit || 60;
 
-        // 내가 공격(푸는 쪽)일 때
         if (isMyTurnToAttack) {
             if (phase === 'selecting_sentence') {
                 html = `<div style="background:#fff3cd; color:#856404; padding:15px; border-radius:10px; font-weight:bold;">수비팀(투수)이 문제를 준비하고 있습니다... ⚾</div>`;
             } else if (phase === 'answering') {
+                const isType = (data.currentQuestion.method === 'type');
                 html = `
                     <div style="background:#eef; padding:15px; border-radius:10px; border:2px solid var(--blue-color);">
                         <div id="timer-display" style="font-size: 18px; font-weight: bold; color: #e67e22; margin-bottom: 10px;">⏳ 남은 시간: ${timeLimit}초</div>
-                        <h4 style="margin:0 0 10px 0; color:#2c3e50;">날아오는 공(문제)을 쳐내세요! 🦇</h4>
+                        <h4 style="margin:0 0 10px 0; color:#2c3e50;">날아오는 공(문제)을 쳐내세요! 🦇 (${isType ? '⌨️ 타자' : '🎤 말하기'})</h4>
                         <div style="font-size:20px; font-weight:bold; margin-bottom:15px; color:#E24A4A;">"${data.currentQuestion.ko}"</div>
-                        <input type="text" id="answer-input" placeholder="정확한 영문장 입력" autocomplete="off" spellcheck="false" style="margin-bottom:5px;">
+                `;
+                if (isType) {
+                    html += `
+                        <input type="text" id="answer-input" placeholder="정확한 영문장 입력 (Enter로 제출)" autocomplete="off" spellcheck="false" style="margin-bottom:5px;">
                         <button id="btn-submit-answer" class="btn-blue">타격하기 (제출)</button>
-                    </div>`;
+                    `;
+                } else {
+                    html += `
+                        <button id="btn-start-speak" class="btn-red">🎤 클릭하여 말하기 시작</button>
+                        <div id="speech-result" style="margin-top:10px; font-weight:bold; color:var(--blue-color);"></div>
+                        <button id="btn-submit-speak" class="btn-blue hidden" data-transcript="">타격하기 (제출)</button>
+                    `;
+                }
+                html += `</div>`;
             }
         } 
-        // 내가 수비(출제하는 쪽)일 때
         else {
             if (phase === 'selecting_sentence') {
                 html = `
                     <div style="background:#fff3cd; padding:15px; border-radius:10px; border:2px solid #ffeeba;">
                         <h4 style="margin:0 0 10px 0; color:#856404;">투구(문제 출제)를 선택하세요! 🧤</h4>
+                        <div style="margin-bottom: 10px; background: white; padding: 10px; border-radius: 5px; text-align: center; border: 1px solid #ddd;">
+                            <span style="font-size: 13px; font-weight: bold; margin-right: 10px;">답변 방식 지정:</span>
+                            <label style="cursor:pointer; margin-right: 10px;"><input type="radio" name="q-method" value="type" checked> ⌨️ 타자</label>
+                            <label style="cursor:pointer;"><input type="radio" name="q-method" value="speak"> 🎤 말하기</label>
+                        </div>
                         <div style="max-height:160px; overflow-y:auto; border:1px solid #ddd; border-radius:5px; background:white; padding:5px;">
                             ${generateQuestionList(data.unitId)}
                         </div>
@@ -816,7 +887,7 @@
     function generateQuestionList(unitId) {
         if (!unitId) return `
             <div style="padding:10px; text-align:left;">
-                <input type="text" id="manual-en" placeholder="영어 정답 (예: I am happy)" style="padding:8px; font-size:14px;">
+                <input type="text" id="manual-en" placeholder="영어 정답 (예: I am happy)" style="padding:8px; font-size:14px; margin-bottom:5px;">
                 <input type="text" id="manual-ko" placeholder="한국어 문제 (예: 나는 행복하다)" style="padding:8px; margin-bottom:10px; font-size:14px;">
                 <button id="btn-send-manual" class="btn-blue">공 던지기</button>
             </div>`;
@@ -837,7 +908,7 @@
             if (left <= 0) {
                 left = 0; clearInterval(timerInterval); timerInterval = null;
                 timerEl.innerText = `⏳ 시간 초과!`; timerEl.style.color = 'red';
-                if (isMyTurnToAttack) processHitResult(false, data);
+                if (isMyTurnToAttack) submitAnswerCheck("", data.currentQuestion.en, data);
             } else {
                 timerEl.innerText = `⏳ 남은 시간: ${left}초`;
                 if (left <= 10) timerEl.style.color = 'red';
@@ -847,7 +918,13 @@
         timerInterval = setInterval(updateTick, 1000);
     }
 
-    // 버튼 이벤트 처리
+    // 엔터키 제출 지원
+    interactionPanel.addEventListener('keypress', (e) => {
+        if (e.target.id === 'answer-input' && e.key === 'Enter') {
+            document.getElementById('btn-submit-answer').click();
+        }
+    });
+
     interactionPanel.addEventListener('click', async (e) => {
         if (!window.currentGameData || !currentRoomId) return;
         const data = window.currentGameData;
@@ -857,86 +934,116 @@
         const qItem = e.target.closest('.q-item');
         if (qItem) {
             const en = qItem.getAttribute('data-en'), ko = qItem.getAttribute('data-ko');
-            await updateDoc(roomRef, { turnPhase: 'answering', currentQuestion: { en, ko, startTime: Date.now() } });
+            const method = document.querySelector('input[name="q-method"]:checked').value;
+            await updateDoc(roomRef, { turnPhase: 'answering', currentQuestion: { en, ko, method, startTime: Date.now() } });
         }
         if (e.target.id === 'btn-send-manual') {
             const en = document.getElementById('manual-en').value.trim(), ko = document.getElementById('manual-ko').value.trim();
             if(!en || !ko) return showToast("정답/문제를 모두 입력하세요.");
-            await updateDoc(roomRef, { turnPhase: 'answering', currentQuestion: { en, ko, startTime: Date.now() } });
+            const method = document.querySelector('input[name="q-method"]:checked').value;
+            await updateDoc(roomRef, { turnPhase: 'answering', currentQuestion: { en, ko, method, startTime: Date.now() } });
         }
 
-        // 공격: 정답 제출
+        // 공격: 정답 제출 (타자)
         if (e.target.id === 'btn-submit-answer') {
             const userIn = document.getElementById('answer-input').value;
-            const correct = data.currentQuestion.en;
-            const norm = (s) => (s||"").toLowerCase().replace(/[^a-z0-9]/g, '');
-            const isCorrect = norm(userIn) === norm(correct);
-            processHitResult(isCorrect, data);
+            submitAnswerCheck(userIn, data.currentQuestion.en, data);
+        }
+
+        // 공격: 마이크 기능
+        if (e.target.id === 'btn-start-speak') {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return showToast("이 브라우저에서는 음성 인식을 지원하지 않습니다.");
+            const btn = e.target; btn.innerText = "🎤 듣는 중..."; btn.style.backgroundColor = "#c0392b";
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.onresult = (ev) => {
+                const tr = ev.results[0][0].transcript;
+                document.getElementById('speech-result').innerHTML = `인식됨: <span style="color:#333; font-size:18px;">"${tr}"</span>`;
+                const sb = document.getElementById('btn-submit-speak'); sb.setAttribute('data-transcript', tr); sb.classList.remove('hidden');
+                btn.innerText = "🎤 다시 말하기"; btn.style.backgroundColor = "var(--blue-color)";
+            };
+            recognition.onerror = () => { showToast("인식 실패"); btn.innerText = "🎤 다시 시도"; btn.style.backgroundColor = "var(--red-color)"; };
+            recognition.start();
+        }
+
+        // 공격: 정답 제출 (음성)
+        if (e.target.id === 'btn-submit-speak') {
+            const tr = e.target.getAttribute('data-transcript');
+            if(!tr) return showToast("마이크에 먼저 말해주세요.");
+            submitAnswerCheck(tr, data.currentQuestion.en, data);
         }
     });
 
-    // 야구 로직 엔진
-    async function processHitResult(isCorrect, data) {
+    function submitAnswerCheck(userIn, correct, data) {
         if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+        const norm = (s) => (s||"").toLowerCase().replace(/[^a-z0-9]/g, '');
+        const isCorrect = norm(userIn) === norm(correct);
         
-        let { inning, half, outs, bases, score, offense, log, inningScores } = data;
+        let hitType = "", hitText = "", isOut = false, isWalk = false;
+
+        if (!isCorrect) {
+            hitType = 'strikeout'; hitText = "헛스윙 삼진! ❌"; isOut = true;
+        } else {
+            // 정답 시 랜덤 생성 (아웃 10%, 볼넷 15%, 1루타 45%, 2루타 20%, 3루타 5%, 홈런 5%)
+            let rand = Math.random() * 100;
+            if (rand < 10) { hitType = 'out'; hitText = "잘 맞은 타구... 야수 정면! 아웃 ⚾"; isOut = true; }
+            else if (rand < 25) { hitType = 'walk'; hitText = "볼넷 골라냅니다! (Walk) 🚶"; isWalk = true; }
+            else if (rand < 70) { hitType = '1b'; hitText = "1루타! 🏃"; }
+            else if (rand < 90) { hitType = '2b'; hitText = "우중간 가르는 2루타! 🏃🏃"; }
+            else if (rand < 95) { hitType = '3b'; hitText = "펜스 맞는 3루타!! 🏃🏃🏃"; }
+            else { hitType = 'hr'; hitText = "담장 밖으로~~~ 홈런!!!! 🎆⚾"; }
+        }
+
+        // 1. DB에 'showing_result' 상태를 올려 양쪽 클라이언트가 큼직한 애니메이션을 보게 함
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+        updateDoc(roomRef, {
+            turnPhase: 'showing_result',
+            currentHit: { type: hitType, text: hitText, isOut, isWalk }
+        }).then(() => {
+            // 2. 공격측(자신)에서 1.5초 대기 후 실제 게임 결과를 계산하여 DB 업데이트
+            setTimeout(() => { applyHitResultToDB(data, hitType, isOut, isWalk, hitText); }, 1500);
+        });
+    }
+
+    async function applyHitResultToDB(data, hitType, isOut, isWalk, hitText) {
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+        let { inning, half, outs, bases, score, inningScores, offense, log, batters } = data;
         let newLog = [...log];
         let runScoredOnThisPlay = 0;
         let pName = myUserInfo.name;
 
-        if (isCorrect) {
-            // 정답을 맞추더라도 야구 룰에 따라 결과 랜덤 발생
-            const rand = Math.random() * 100;
-            let hitType = 1, hitName = "안타(1루타)";
-            
-            if (rand < 25) { hitType = 'OUT'; hitName = "아웃 (수비수 정면)"; } // 25% 확률 아웃
-            else if (rand < 40) { hitType = 'BB'; hitName = "볼넷"; } // 15% 확률 볼넷
-            else if (rand < 75) { hitType = 1; hitName = "1루타"; } // 35% 확률 1루타
-            else if (rand < 90) { hitType = 2; hitName = "2루타"; } // 15% 확률 2루타
-            else if (rand < 95) { hitType = 3; hitName = "3루타"; } // 5% 확률 3루타
-            else { hitType = 4; hitName = "홈런!! 🎆"; } // 5% 확률 홈런
+        newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${batters[offense]}번 ${pName}: 👉 ${hitText}`);
 
-            if (hitType === 'OUT') {
-                showToast(`잘 맞은 타구! 하지만 ${hitName}!`);
-                newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${pName}: 정답! 👉 그러나 ${hitName}`);
-                outs++;
-            } else if (hitType === 'BB') {
-                showToast(`정답! ${hitName} 출루`);
-                newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${pName}: 정답! 👉 ${hitName} 출루!`);
-                // 볼넷 밀어내기 진루 계산
-                if (bases[0]) {
-                    if (bases[1]) {
-                        if (bases[2]) runScoredOnThisPlay++;
-                        bases[2] = true;
-                    }
-                    bases[1] = true;
-                }
-                bases[0] = true;
-            } else {
-                showToast(`정답! 깡! ${hitName}`);
-                newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${pName}: 정답! 👉 ${hitName} 타격!`);
-
-                // 안타 진루 계산
-                if (hitType === 4) { // 홈런
-                    runScoredOnThisPlay += bases.filter(b => b).length + 1;
-                    bases = [false, false, false];
-                } else {
-                    for(let i=2; i>=0; i--) {
-                        if(bases[i]) {
-                            if(i + hitType > 2) runScoredOnThisPlay++;
-                            else bases[i + hitType] = true;
-                            bases[i] = false;
-                        }
-                    }
-                    bases[hitType - 1] = true;
-                }
-            }
-        } else {
-            showToast("오답(또는 시간초과) -> 스트라이크 아웃!");
+        if (isOut) {
             outs++;
-            newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] ${pName}: 오답/초과 👉 스트라이크 아웃!`);
+        } else if (isWalk) {
+            // 볼넷 진루 로직 (밀어내기)
+            if (bases[0] && bases[1] && bases[2]) { runScoredOnThisPlay++; } 
+            else if (bases[0] && bases[1]) { bases[2] = true; } 
+            else if (bases[0]) { bases[1] = true; }
+            bases[0] = true;
+        } else {
+            // 안타 진루 로직
+            if (hitType === 'hr') {
+                runScoredOnThisPlay += bases.filter(b => b).length + 1;
+                bases = [false, false, false];
+            } else {
+                let advance = hitType === '1b' ? 1 : (hitType === '2b' ? 2 : 3);
+                for(let i=2; i>=0; i--) {
+                    if(bases[i]) {
+                        if(i + advance > 2) runScoredOnThisPlay++;
+                        else bases[i + advance] = true;
+                        bases[i] = false;
+                    }
+                }
+                bases[advance - 1] = true;
+            }
         }
+
+        // 타순 증가
+        batters[offense]++;
+        if(batters[offense] > 9) batters[offense] = 1;
 
         // 점수 업데이트
         if (runScoredOnThisPlay > 0) {
@@ -955,15 +1062,14 @@
             outs = 0;
             bases = [false, false, false];
             if (half === 'top') {
-                half = 'bottom'; offense = 'red';
+                half = 'bottom'; offense = (offense === 'blue' ? 'red' : 'blue');
             } else {
-                half = 'top'; offense = 'blue'; inning++;
+                half = 'top'; offense = (offense === 'blue' ? 'red' : 'blue'); inning++;
             }
-            // 매 이닝 시작 시 0으로 초기화 표기
             if(inning <= 3) inningScores[offense][inning-1] = 0;
         }
 
-        // 게임 종료 조건 체크 (3이닝 초과 또는 3회말 끝내기)
+        // 게임 종료 조건
         if (inning > 3 || (inning === 3 && half === 'bottom' && score.red > score.blue)) {
             status = 'finished';
             if (score.blue > score.red) winner = 'blue';
@@ -972,20 +1078,17 @@
             newLog.unshift(`🏁 경기 종료!`);
         }
 
-        if (newLog.length > 20) newLog = newLog.slice(0, 20); // 로그 길이 제한
+        if (newLog.length > 20) newLog = newLog.slice(0, 20);
 
         const updates = {
-            inning, half, outs, bases, score, inningScores, offense, log: newLog,
-            turnPhase: 'selecting_sentence', currentQuestion: null,
+            inning, half, outs, bases, score, inningScores, offense, batters, log: newLog,
+            turnPhase: 'selecting_sentence', currentQuestion: null, currentHit: null,
             status, winner
         };
 
         await updateDoc(roomRef, updates);
         
-        // 승리 기록
-        if (status === 'finished' && winner === window.myColor) {
-            recordWin(data.unitId);
-        }
+        if (status === 'finished' && winner === window.myColor) recordWin(data.unitId);
     }
 
     async function recordWin(unitId) {
@@ -1028,7 +1131,6 @@
         showScreen('lobby');
     }
 
-    // 2. RULE 2: No Complex Queries (명예의 전당 최적화)
     async function loadLeaderboard() {
         const tbody = document.getElementById('hof-tbody');
         tbody.innerHTML = '<tr><td colspan="4">데이터를 불러오는 중...</td></tr>';
@@ -1040,14 +1142,11 @@
         const lbRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
         
         try {
-            // 모든 기록을 가져온 뒤 JS에서 필터링 (복합 쿼리 방지)
             const snap = await getDocs(lbRef);
             let results = [];
             
             snap.forEach(doc => {
                 const d = doc.data();
-                
-                // 메모리 내 필터링 적용
                 if (gFilter !== 'all' && d.grade !== gFilter) return;
                 if (cFilter !== 'all' && d.classNum !== cFilter) return;
 
@@ -1058,7 +1157,6 @@
                 if (wins > 0) results.push({ ...d, sortWins: wins });
             });
 
-            // 정렬
             results.sort((a, b) => b.sortWins - a.sortWins);
 
             if (results.length === 0) {
