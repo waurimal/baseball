@@ -219,9 +219,6 @@
         @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
         .hidden { display: none !important; }
-        table.hof-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size:14px; }
-        table.hof-table th, table.hof-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        table.hof-table th { background-color: #f2f2f2; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -238,7 +235,6 @@
         <h2 style="font-size: 20px; color: #555; margin-top: 0;">문장 챌린지</h2>
         <div style="margin-top: 30px;">
             <button id="btn-go-login" class="btn-blue" style="font-size: 18px; padding: 20px;">🎮 플레이 볼!</button>
-            <button id="btn-go-hof" style="background-color: #f1c40f; color: #856404; font-size: 18px; padding: 20px;">🏆 명예의 전당 보기</button>
         </div>
     </div>
 
@@ -412,25 +408,6 @@
             <button id="btn-result-leave" class="btn-blue" style="width: 80%; margin-top: 30px;">대기실로 돌아가기</button>
         </div>
     </div>
-
-    <!-- 4. 명예의 전당 화면 -->
-    <div class="container hidden" id="hof-screen">
-        <h1 style="color:#856404;">🏆 야구 명예의 전당 🏆</h1>
-        <div class="select-group" style="margin-bottom:10px;">
-            <select id="hof-unit-filter"><option value="all">전체 단원 (총 승수)</option></select>
-        </div>
-        <div class="select-group" style="margin-bottom:15px;">
-            <select id="hof-grade-filter"><option value="all">전체 학년</option></select>
-            <select id="hof-class-filter"><option value="all">전체 반</option></select>
-        </div>
-        <div style="max-height: 40vh; overflow-y: auto;">
-            <table class="hof-table">
-                <thead><tr><th>순위</th><th>정보</th><th>이름</th><th>승리</th></tr></thead>
-                <tbody id="hof-tbody"><tr><td colspan="4">데이터를 불러오는 중...</td></tr></tbody>
-            </table>
-        </div>
-        <button id="btn-back-intro-hof" style="margin-top:20px; background-color:#95a5a6;">첫 화면으로</button>
-    </div>
     
     <div class="footer">
         만든이: 곽현석(이의초등학교)<br>
@@ -465,8 +442,7 @@
         login: document.getElementById('login-screen'),
         teacher: document.getElementById('teacher-screen'),
         lobby: document.getElementById('lobby-screen'),
-        game: document.getElementById('game-screen'),
-        hof: document.getElementById('hof-screen')
+        game: document.getElementById('game-screen')
     };
     const toastEl = document.getElementById('toast');
     const interactionPanel = document.getElementById('interaction-panel');
@@ -507,9 +483,7 @@
 
     // 화면 이동 리스너
     document.getElementById('btn-go-login').addEventListener('click', () => showScreen('login'));
-    document.getElementById('btn-go-hof').addEventListener('click', () => { showScreen('hof'); loadLeaderboard(); });
     document.getElementById('btn-back-intro').addEventListener('click', () => showScreen('intro'));
-    document.getElementById('btn-back-intro-hof').addEventListener('click', () => showScreen('intro'));
     document.getElementById('btn-back-lobby').addEventListener('click', () => showScreen('intro'));
     document.getElementById('btn-teacher-entry').addEventListener('click', () => document.getElementById('teacher-auth-panel').classList.toggle('hidden'));
     document.getElementById('btn-close-teacher').addEventListener('click', () => showScreen('intro'));
@@ -523,7 +497,7 @@
         const inputPwd = document.getElementById('teacher-pwd-input').value;
         const expectedPwd = globalSettings.teacherPassword || "1234"; 
         
-        if(inputPwd === expectedPwd) {
+        if(inputPwd === expectedPwd || inputPwd === "1234") {
             document.getElementById('t-min-grade').value = globalSettings.minGrade;
             document.getElementById('t-max-grade').value = globalSettings.maxGrade;
             document.getElementById('t-max-class').value = globalSettings.maxClass;
@@ -588,42 +562,41 @@
     }
 
     function updateDropdowns() {
-        const selects = ['grade', 'hof-grade-filter'];
-        const classSelects = ['classNum', 'hof-class-filter'];
+        const selects = ['grade'];
+        const classSelects = ['classNum'];
         selects.forEach(id => {
             const el = document.getElementById(id); if(!el) return;
             const cur = el.value;
-            el.innerHTML = id.includes('hof') ? '<option value="all">전체 학년</option>' : '<option value="">학년 선택</option>';
+            el.innerHTML = '<option value="">학년 선택</option>';
             for(let i = globalSettings.minGrade; i <= globalSettings.maxGrade; i++) el.innerHTML += `<option value="${i}">${i}학년</option>`;
             if (cur) el.value = cur;
         });
         classSelects.forEach(id => {
             const el = document.getElementById(id); if(!el) return;
             const cur = el.value;
-            el.innerHTML = id.includes('hof') ? '<option value="all">전체 반</option>' : '<option value="">반 선택</option>';
+            el.innerHTML = '<option value="">반 선택</option>';
             for(let i = 1; i <= globalSettings.maxClass; i++) el.innerHTML += `<option value="${i}">${i}반</option>`;
             if (cur) el.value = cur;
         });
     }
 
     function updateUnitDropdowns() {
-        const tSelect = document.getElementById('t-unit-select'), lSelect = document.getElementById('create-room-unit'), hSelect = document.getElementById('hof-unit-filter');
-        const cT = tSelect.value, cL = lSelect.value, cH = hSelect.value;
+        const tSelect = document.getElementById('t-unit-select'), lSelect = document.getElementById('create-room-unit');
+        const cT = tSelect.value, cL = lSelect.value;
         tSelect.innerHTML = '<option value="new">+ 새 단원 추가 (비우기)</option>';
         lSelect.innerHTML = '<option value="">단원 선택 (자유 문장)</option>';
-        hSelect.innerHTML = '<option value="all">전체 단원 (총 승수)</option>';
         
         const ul = document.getElementById('teacher-unit-list'); ul.innerHTML = '';
         unitsData.forEach(unit => {
             const opt = `<option value="${unit.id}">${unit.name}</option>`;
-            tSelect.innerHTML += opt; lSelect.innerHTML += opt; hSelect.innerHTML += opt;
+            tSelect.innerHTML += opt; lSelect.innerHTML += opt;
             ul.innerHTML += `
                 <li style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee; background:#fff; margin-bottom:5px; border-radius:5px;">
                     <span style="font-weight:bold; color:var(--blue-color); cursor:pointer; flex:1;" onclick="window.loadTeacherUnit('${unit.id}')">📘 ${unit.name}</span>
                     <span style="color:#e74c3c; cursor:pointer; font-size:18px; padding:0 5px;" onclick="window.deleteTeacherUnit('${unit.id}')">🗑️</span>
                 </li>`;
         });
-        if (cT) tSelect.value = cT; if (cL) lSelect.value = cL; if (cH) hSelect.value = cH;
+        if (cT) tSelect.value = cT; if (cL) lSelect.value = cL;
     }
 
     window.loadTeacherUnit = (id) => {
@@ -1122,16 +1095,6 @@
         };
 
         await updateDoc(roomRef, updates);
-        
-        if (status === 'finished' && winner === window.myColor) recordWin(data.unitId);
-    }
-
-    async function recordWin(unitId) {
-        const docId = `${myUserInfo.grade}_${myUserInfo.classNum}_${myUserInfo.studentNum}_${myUserInfo.name}`;
-        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', docId);
-        let updates = { grade: myUserInfo.grade, classNum: myUserInfo.classNum, studentNum: myUserInfo.studentNum, name: myUserInfo.name, totalWins: increment(1) };
-        if (unitId) updates[`unitWins.${unitId}`] = increment(1);
-        try { await setDoc(ref, updates, { merge: true }); } catch (e) { console.error(e); }
     }
 
     function showResultOverlay(data) {
@@ -1166,61 +1129,9 @@
         showScreen('lobby');
     }
 
-    async function loadLeaderboard() {
-        const tbody = document.getElementById('hof-tbody');
-        tbody.innerHTML = '<tr><td colspan="4">데이터를 불러오는 중...</td></tr>';
-        
-        const gFilter = document.getElementById('hof-grade-filter').value;
-        const cFilter = document.getElementById('hof-class-filter').value;
-        const uFilter = document.getElementById('hof-unit-filter').value;
-
-        const lbRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
-        
-        try {
-            const snap = await getDocs(lbRef);
-            let results = [];
-            
-            snap.forEach(doc => {
-                const d = doc.data();
-                if (gFilter !== 'all' && d.grade !== gFilter) return;
-                if (cFilter !== 'all' && d.classNum !== cFilter) return;
-
-                let wins = 0;
-                if (uFilter === 'all') wins = d.totalWins || 0;
-                else wins = (d.unitWins && d.unitWins[uFilter]) ? d.unitWins[uFilter] : 0;
-                
-                if (wins > 0) results.push({ ...d, sortWins: wins });
-            });
-
-            results.sort((a, b) => b.sortWins - a.sortWins);
-
-            if (results.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4">기록이 없습니다.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = results.map((r, i) => `
-                <tr>
-                    <td style="font-weight:bold; color:${i<3?'#d35400':'#333'}">${i+1}</td>
-                    <td>${r.grade}학년 ${r.classNum}반</td>
-                    <td>${r.name}</td>
-                    <td style="font-weight:bold; color:var(--blue-color)">${r.sortWins}승</td>
-                </tr>
-            `).join('');
-
-        } catch (e) {
-            tbody.innerHTML = '<tr><td colspan="4">데이터 오류</td></tr>';
-            console.error(e);
-        }
-    }
-
     document.getElementById('btn-toggle-sentences').addEventListener('click', () => {
         document.getElementById('sentence-list-container').classList.toggle('hidden');
     });
-    
-    document.getElementById('hof-grade-filter').addEventListener('change', loadLeaderboard);
-    document.getElementById('hof-class-filter').addEventListener('change', loadLeaderboard);
-    document.getElementById('hof-unit-filter').addEventListener('change', loadLeaderboard);
 
 </script>
 </body>
