@@ -8,7 +8,7 @@
         :root {
             --blue-color: #2980b9;
             --red-color: #c0392b;
-            --bg-color: #e8f5e9; /* 잔디색 느낌의 배경 */
+            --bg-color: #e8f5e9;
             --field-color: #27ae60;
             --dirt-color: #d35400;
         }
@@ -92,16 +92,15 @@
         .out-dot { width: 12px; height: 12px; border-radius: 50%; background: #444; border: 1px solid #222; }
         .out-dot.on { background: #e74c3c; box-shadow: 0 0 5px #e74c3c; }
 
-        /* 야구장 및 로그 레이아웃 래퍼 */
         .game-view-row {
             display: flex;
             gap: 12px;
             margin: 15px 0;
-            height: 300px; /* 세로 높이 확대 */
+            height: 300px;
         }
 
         .field-container {
-            flex: 1.8; /* 야구장 영역 비율 */
+            flex: 1.8;
             background: var(--field-color);
             border-radius: 10px;
             position: relative;
@@ -120,18 +119,17 @@
             transform: translateX(-50%);
         }
 
-        /* 다이아몬드 (파울라인 및 내야 흙) */
         .diamond-dirt {
             position: absolute;
-            bottom: 60px; /* 전체 베이스를 위로 상향 */
+            bottom: 60px;
             left: 50%;
-            margin-left: -70px; /* width 140의 절반 */
+            margin-left: -70px;
             width: 140px;
             height: 140px;
             background: var(--dirt-color);
             transform: rotate(45deg);
-            border-bottom: 2px solid rgba(255, 255, 255, 0.8); /* 3루 파울라인 */
-            border-right: 2px solid rgba(255, 255, 255, 0.8);  /* 1루 파울라인 */
+            border-bottom: 2px solid rgba(255, 255, 255, 0.8);
+            border-right: 2px solid rgba(255, 255, 255, 0.8);
         }
 
         .base {
@@ -141,25 +139,22 @@
             box-sizing: border-box;
         }
         
-        /* 베이스 절대 위치 정밀 조정 (다이아몬드 중심: bottom 130px, 반대각선 99px) */
         .base-home { 
             bottom: 31px; left: 50%; margin-left: -13px; margin-bottom: -13px;
-            clip-path: polygon(0 0, 100% 0, 100% 50%, 50% 100%, 0 50%); /* 5각형 홈플레이트 */
+            clip-path: polygon(0 0, 100% 0, 100% 50%, 50% 100%, 0 50%);
         }
         .base-1 { bottom: 130px; left: calc(50% + 99px); margin-left: -13px; margin-bottom: -13px; transform: rotate(45deg); }
         .base-2 { bottom: 229px; left: 50%; margin-left: -13px; margin-bottom: -13px; transform: rotate(45deg); }
         .base-3 { bottom: 130px; left: calc(50% - 99px); margin-left: -13px; margin-bottom: -13px; transform: rotate(45deg); }
         
         .base.on { background: #f1c40f; border-color: #d4ac0d; box-shadow: 0 0 10px #f1c40f; transform: rotate(45deg) scale(1.1); }
-        .base-home.on { transform: scale(1.1); } /* 홈은 rotate 안함 */
+        .base-home.on { transform: scale(1.1); }
 
-        /* 주자(캐릭터) 애니메이션 효과 */
         .runner-emoji {
             position: absolute;
             font-size: 26px;
             z-index: 10;
             filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
-            /* 부모 베이스의 rotate(45deg) 상쇄를 위해 -45deg 적용 */
             transform: rotate(-45deg) translate(-2px, -15px);
             animation: runnerBounce 0.3s infinite alternate;
         }
@@ -168,9 +163,8 @@
             to { transform: rotate(-45deg) translate(-2px, -20px); }
         }
 
-        /* 플레이 로그 패널 */
         #play-log {
-            flex: 1; /* 로그 영역 비율 */
+            flex: 1;
             background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px;
             overflow-y: auto; padding: 10px; font-size: 13px; text-align: left;
             margin: 0;
@@ -199,6 +193,7 @@
         .hit-anim-text {
             font-size: 50px; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px #e67e22;
             animation: hitZoom 0.5s ease-out forwards;
+            text-align: center; padding: 0 20px;
         }
         @keyframes hitZoom {
             0% { transform: scale(0.2); opacity: 0; }
@@ -398,6 +393,8 @@
         <!-- 오버레이: 타격 결과 (애니메이션 연출용) -->
         <div id="hit-result-overlay" class="overlay-screen hidden">
             <div id="hit-anim-container" class="hit-anim-text">홈런!</div>
+            <button id="btn-dismiss-hit" class="btn-blue hidden" style="margin-top: 40px; width: auto; padding: 15px 30px; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">다음으로 넘어가기 ⏭️</button>
+            <div id="hit-wait-text" class="hidden" style="margin-top: 40px; font-size: 16px; color: #ccc;">상대방이 확인 중입니다...</div>
         </div>
 
         <!-- 오버레이: 최종 승패 결과 -->
@@ -481,14 +478,12 @@
     });
     initAuth();
 
-    // 화면 이동 리스너
     document.getElementById('btn-go-login').addEventListener('click', () => showScreen('login'));
     document.getElementById('btn-back-intro').addEventListener('click', () => showScreen('intro'));
     document.getElementById('btn-back-lobby').addEventListener('click', () => showScreen('intro'));
     document.getElementById('btn-teacher-entry').addEventListener('click', () => document.getElementById('teacher-auth-panel').classList.toggle('hidden'));
     document.getElementById('btn-close-teacher').addEventListener('click', () => showScreen('intro'));
 
-    // 교사 모드 진입 및 설정 로직
     document.getElementById('teacher-pwd-input').addEventListener('keypress', (e) => {
         if(e.key === 'Enter') document.getElementById('btn-submit-teacher-pwd').click();
     });
@@ -686,7 +681,6 @@
         if (data.player2) { p2Info.innerText = data.player2.name; p2Info.style.backgroundColor = "var(--red-color)"; } 
         else { p2Info.innerText = "대기 중..."; p2Info.style.backgroundColor = "#ccc"; }
 
-        // 전광판 업데이트
         document.getElementById('sb-blue-name').innerText = data.player1 ? data.player1.name.substring(0,3) : "Blue";
         document.getElementById('sb-red-name').innerText = data.player2 ? data.player2.name.substring(0,3) : "Red";
         
@@ -707,7 +701,6 @@
             document.getElementById('current-batter-info').innerText = "";
         }
 
-        // 다이아몬드 베이스 업데이트 및 주자 캐릭터 렌더링
         const bases = data.bases || [false, false, false];
         document.getElementById('base-1').className = `base base-1 ${bases[0] ? 'on' : ''}`;
         document.getElementById('base-1').innerHTML = bases[0] ? '<div class="runner-emoji">🏃</div>' : '';
@@ -716,7 +709,6 @@
         document.getElementById('base-3').className = `base base-3 ${bases[2] ? 'on' : ''}`;
         document.getElementById('base-3').innerHTML = bases[2] ? '<div class="runner-emoji">🏃</div>' : '';
 
-        // 로그 업데이트
         const logHtml = (data.log || []).map(l => `<div class="log-entry">${l}</div>`).join('');
         document.getElementById('play-log').innerHTML = logHtml || "경기가 시작되었습니다!";
 
@@ -763,10 +755,25 @@
             interactionPanel.innerHTML = "";
             hitResultOverlay.classList.remove('hidden');
             const hitTextEl = document.getElementById('hit-anim-container');
-            hitTextEl.innerText = data.currentHit.text;
+            
+            let displayHtml = data.currentHit.text;
+            if (data.currentHit.detailText) {
+                displayHtml += `<br><span style="font-size:24px; color:#fff; font-weight:normal; text-shadow: 0 0 10px #000;">${data.currentHit.detailText}</span>`;
+            }
+            hitTextEl.innerHTML = displayHtml;
+
             if(data.currentHit.isOut) hitTextEl.style.color = "#e74c3c";
             else if(data.currentHit.isWalk) hitTextEl.style.color = "#3498db";
             else hitTextEl.style.color = "#f1c40f";
+            
+            if (data.offense === window.myColor) {
+                document.getElementById('btn-dismiss-hit').classList.remove('hidden');
+                document.getElementById('hit-wait-text').classList.add('hidden');
+            } else {
+                document.getElementById('btn-dismiss-hit').classList.add('hidden');
+                document.getElementById('hit-wait-text').classList.remove('hidden');
+                document.getElementById('hit-wait-text').innerText = "상대방이 확인 중입니다...";
+            }
             
             return; 
         } else {
@@ -992,15 +999,31 @@
         }
     });
 
+    document.getElementById('btn-dismiss-hit').addEventListener('click', () => {
+        const data = window.currentGameData;
+        if (!data || data.turnPhase !== 'showing_result' || data.offense !== window.myColor) return;
+        
+        // 버튼 연타 방지 및 처리 중 표시
+        document.getElementById('btn-dismiss-hit').classList.add('hidden');
+        document.getElementById('hit-wait-text').classList.remove('hidden');
+        document.getElementById('hit-wait-text').innerText = "처리 중...";
+
+        const hit = data.currentHit;
+        applyHitResultToDB(data, hit.type, hit.isOut, hit.isWalk, hit.text, hit.detailText);
+    });
+
     function submitAnswerCheck(userIn, correct, data) {
         if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
         const norm = (s) => (s||"").toLowerCase().replace(/[^a-z0-9]/g, '');
         const isCorrect = norm(userIn) === norm(correct);
         
-        let hitType = "", hitText = "", isOut = false, isWalk = false;
+        let hitType = "", hitText = "", detailText = "", isOut = false, isWalk = false;
 
         if (!isCorrect) {
-            hitType = 'strikeout'; hitText = "헛스윙 삼진! ❌"; isOut = true;
+            hitType = 'strikeout'; 
+            hitText = "헛스윙 삼진! ❌"; 
+            detailText = `정답: ${correct}`; // 오답 시 정답을 전달
+            isOut = true;
         } else {
             let rand = Math.random() * 100;
             if (rand < 10) { hitType = 'out'; hitText = "잘 맞은 타구... 야수 정면! 아웃 ⚾"; isOut = true; }
@@ -1014,20 +1037,22 @@
         const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
         updateDoc(roomRef, {
             turnPhase: 'showing_result',
-            currentHit: { type: hitType, text: hitText, isOut, isWalk }
-        }).then(() => {
-            setTimeout(() => { applyHitResultToDB(data, hitType, isOut, isWalk, hitText); }, 1500);
+            currentHit: { type: hitType, text: hitText, detailText: detailText, isOut, isWalk }
         });
     }
 
-    async function applyHitResultToDB(data, hitType, isOut, isWalk, hitText) {
+    async function applyHitResultToDB(data, hitType, isOut, isWalk, hitText, detailText) {
         const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
         let { inning, half, outs, bases, score, inningScores, offense, log, batters } = data;
         let newLog = [...log];
         let runScoredOnThisPlay = 0;
         let pName = myUserInfo.name;
 
-        newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] <strong>${batters[offense]}번 ${pName}</strong>: 👉 ${hitText}`);
+        // 로그 텍스트 조립 (정답 포함)
+        let logText = hitText;
+        if (detailText) logText += ` (${detailText})`;
+
+        newLog.unshift(`[${inning}회${half==='top'?'초':'말'}] <strong>${batters[offense]}번 ${pName}</strong>: 👉 ${logText}`);
 
         if (isOut) {
             outs++;
@@ -1132,7 +1157,6 @@
     document.getElementById('btn-toggle-sentences').addEventListener('click', () => {
         document.getElementById('sentence-list-container').classList.toggle('hidden');
     });
-
 </script>
 </body>
 </html>
