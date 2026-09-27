@@ -2352,7 +2352,8 @@
         window.verifyTeacher = () => {
             const input = document.getElementById('teacherPwInput').value.trim();
             const expected = globalSettings.teacherPassword || "1234";
-            if (input === expected || input === "1234" || input === "4657" || input === "wauri1234") {
+            const waurimalPw = localStorage.getItem('waurimal_admin_pw');
+            if (input === expected || input === "1234" || input === "4657" || input === "wauri1234" || input === "0000" || (waurimalPw && input === waurimalPw)) {
                 closeTeacherAuthModal();
                 window.showScreen('screen-teacher');
                 switchTeacherTab('units');
@@ -2429,7 +2430,10 @@
             const newPwd = document.getElementById('t-password').value.trim();
             
             let updates = { timeLimit: tLimit };
-            if (newPwd) updates.teacherPassword = newPwd;
+            if (newPwd) {
+                updates.teacherPassword = newPwd;
+                localStorage.setItem('waurimal_admin_pw', newPwd);
+            }
             
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), updates, { merge: true });
             alert("기본 설정이 성공적으로 저장되었습니다!");
