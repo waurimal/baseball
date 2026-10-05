@@ -1445,9 +1445,9 @@
                 p2Info.className = "player-badge badge-red";
                 p2Info.classList.remove('opacity-50');
             } else {
-                p1Info.innerText = data.player1 ? `${data.player1.name} (Blue)` : "대기 중...";
+                p1Info.innerText = data.player1 ? `${maskStudentName(data.player1.name)} (Blue)` : "대기 중...";
                 if (data.player2) {
-                    p2Info.innerText = `${data.player2.name} (Red)`;
+                    p2Info.innerText = `${maskStudentName(data.player2.name)} (Red)`;
                     p2Info.classList.remove('opacity-50');
                 } else {
                     p2Info.innerText = "상대 대기 중...";
@@ -1456,8 +1456,8 @@
             }
 
             // 전광판 점수
-            document.getElementById('sb-blue-name').innerText = data.player1 ? (data.player1.name || "Blue").substring(0, 3) : "Blue";
-            document.getElementById('sb-red-name').innerText = data.player2 ? (data.player2.name || "Red").substring(0, 3) : "Red";
+            document.getElementById('sb-blue-name').innerText = data.player1 ? maskStudentName(data.player1.name || "Blue").substring(0, 3) : "Blue";
+            document.getElementById('sb-red-name').innerText = data.player2 ? maskStudentName(data.player2.name || "Red").substring(0, 3) : "Red";
             
             for(let i=0; i<3; i++) {
                 document.getElementById(`sb-b-${i+1}`).innerText = data.inningScores?.blue[i] !== undefined ? data.inningScores.blue[i] : "-";
@@ -2308,7 +2308,8 @@
                 else if (item.result === '무승부') resColor = 'bg-amber-100 text-amber-800';
                 else if (item.result && (item.result.includes('승') || item.result.includes('득점'))) resColor = 'bg-emerald-100 text-emerald-800';
 
-                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(item.maskedName || '') : (item.maskedName || '');
+                const rawMasked = item.maskedName || maskStudentName(item.name || '선수');
+                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(rawMasked) : rawMasked;
                 const safeAffil = window.WaurimalSanitize ? window.WaurimalSanitize(item.affiliation || '미등록') : (item.affiliation || '미등록');
                 const safeTeam = window.WaurimalSanitize ? window.WaurimalSanitize(item.team || '') : (item.team || '');
                 const safeResult = window.WaurimalSanitize ? window.WaurimalSanitize(item.result || '') : (item.result || '');
