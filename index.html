@@ -1079,6 +1079,12 @@
 
         // 화면 전환 유틸
         window.showScreen = (screenId) => {
+            if (screenId === 'screen-teacher') {
+                if (!window.WaurimalAuth || !window.WaurimalAuth.isAuthenticated()) {
+                    window.openTeacherAuthModal();
+                    return;
+                }
+            }
             const screens = ['screen-home', 'screen-game', 'screen-result', 'screen-teacher'];
             screens.forEach(id => {
                 const el = document.getElementById(id);
@@ -2300,7 +2306,12 @@
                 let resColor = 'bg-slate-100 text-slate-600';
                 if (item.result === '승리') resColor = 'bg-blue-100 text-blue-800';
                 else if (item.result === '무승부') resColor = 'bg-amber-100 text-amber-800';
-                else if (item.result.includes('승') || item.result.includes('득점')) resColor = 'bg-emerald-100 text-emerald-800';
+                else if (item.result && (item.result.includes('승') || item.result.includes('득점'))) resColor = 'bg-emerald-100 text-emerald-800';
+
+                const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(item.maskedName || '') : (item.maskedName || '');
+                const safeAffil = window.WaurimalSanitize ? window.WaurimalSanitize(item.affiliation || '미등록') : (item.affiliation || '미등록');
+                const safeTeam = window.WaurimalSanitize ? window.WaurimalSanitize(item.team || '') : (item.team || '');
+                const safeResult = window.WaurimalSanitize ? window.WaurimalSanitize(item.result || '') : (item.result || '');
 
                 return `
                     <div class="flex items-center justify-between p-2.5 bg-white border border-blue-100 rounded-xl hover:border-blue-300 transition shadow-2xs">
@@ -2310,11 +2321,11 @@
                             </div>
                             <div>
                                 <div class="font-black text-slate-800 text-xs flex items-center gap-1.5">
-                                    <span>${item.maskedName}</span>
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${resColor}">${item.result}</span>
+                                    <span>${safeName}</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${resColor}">${safeResult}</span>
                                 </div>
                                 <div class="text-[10px] text-slate-400 font-medium">
-                                    ${item.affiliation || '미등록'} ${item.team ? '• ' + item.team : ''}
+                                    ${safeAffil} ${safeTeam ? '• ' + safeTeam : ''}
                                 </div>
                             </div>
                         </div>
@@ -2341,6 +2352,13 @@
         // ── 5. 감독(교사) 관리 모드 ──
         // ════════════════════════════════════════════════════════════════════
         window.openTeacherAuthModal = () => {
+            if (window.WaurimalAuth && window.WaurimalAuth.isAuthenticated()) {
+                window.showScreen('screen-teacher');
+                switchTeacherTab('units');
+                document.getElementById('t-time-limit').value = globalSettings.timeLimit || 60;
+                document.getElementById('t-password').value = "";
+                return;
+            }
             document.getElementById('teacherPwInput').value = '';
             document.getElementById('modal-teacher-auth').classList.remove('hidden');
         };
@@ -2351,9 +2369,8 @@
 
         window.verifyTeacher = () => {
             const input = document.getElementById('teacherPwInput').value.trim();
-            const expected = globalSettings.teacherPassword || "1234";
-            const waurimalPw = localStorage.getItem('waurimal_admin_pw');
-            if (input === expected || input === "1234" || input === "4657" || input === "wauri1234" || input === "0000" || (waurimalPw && input === waurimalPw)) {
+            const authOk = window.WaurimalAuth ? window.WaurimalAuth.authenticate(input) : (input === (localStorage.getItem('waurimal_admin_pw') || globalSettings.teacherPassword || "1234"));
+            if (authOk) {
                 closeTeacherAuthModal();
                 window.showScreen('screen-teacher');
                 switchTeacherTab('units');
@@ -2432,7 +2449,11 @@
             let updates = { timeLimit: tLimit };
             if (newPwd) {
                 updates.teacherPassword = newPwd;
-                localStorage.setItem('waurimal_admin_pw', newPwd);
+                if (window.WaurimalAuth) {
+                    window.WaurimalAuth.setPw(newPwd);
+                } else {
+                    localStorage.setItem('waurimal_admin_pw', newPwd);
+                }
             }
             
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), updates, { merge: true });
