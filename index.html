@@ -525,15 +525,24 @@
             <!-- [좌측 50%]: 게임 모드 및 방 생성/참여 -->
             <div class="home-left flex flex-col gap-4">
                 <div class="baseball-card space-y-4">
-                    <!-- 학습 단원 선택 (공통) -->
+                    <!-- 학습 단원 선택 (공통) & 문제 만들기 버튼 -->
                     <div>
-                        <label class="block text-xs font-black text-slate-700 mb-1.5 flex items-center justify-between">
-                            <span>📚 학습 단원 선택</span>
-                            <span class="text-[10px] text-blue-600 font-medium">(미선택시 전체 단원 무작위 출제)</span>
-                        </label>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                                <span>📚 문제 출제 방식 & 학습 단원</span>
+                            </label>
+                            <button type="button" onclick="openTeacherAuthModal()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 transition flex items-center gap-1 shadow-2xs cursor-pointer">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                <span>✏️ 문제/단원 세트 만들기</span>
+                            </button>
+                        </div>
                         <select id="homeUnitSelect" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">전체 단원 (랜덤 문장 출제)</option>
+                            <option value="custom">✍️ 직접 문제 만들고 풀기 (수비수가 자유 출제)</option>
+                            <option value="">🎲 전체 단원 (등록된 모든 문장 랜덤 출제)</option>
                         </select>
+                        <p class="text-[11px] text-slate-500 mt-1.5 font-medium flex items-center gap-1">
+                            <span>💡</span> <span id="homeUnitDesc">수비수(투수)가 경기 중 직접 영어 문제를 만들어 공을 던지고 타자가 맞힙니다!</span>
+                        </p>
                     </div>
 
                     <!-- 1인 타격 연습 박스 (AI 투수 대결) -->
@@ -847,7 +856,7 @@
                 <div class="flex items-center justify-between pb-3 border-b border-slate-200">
                     <div class="flex items-center gap-2">
                         <span class="text-xl">⚙️</span>
-                        <h2 class="text-xl font-black text-slate-800">야구 문장 챌린지 감독(교사) 설정</h2>
+                        <h2 class="text-xl font-black text-slate-800">야구 문장 챌린지 문제/단원 및 교사 관리</h2>
                     </div>
                     <button type="button" onclick="backToHome()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition">
                         닫기
@@ -857,7 +866,7 @@
                 <!-- 교사 탭 네비게이션 -->
                 <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
                     <button type="button" id="t-tab-btn-units" onclick="switchTeacherTab('units')" class="flex-1 py-2 rounded-lg bg-white text-blue-700 shadow-2xs">
-                        단원 및 문장 관리
+                        단원 및 문장 관리 (문제 세트 만들기)
                     </button>
                     <button type="button" id="t-tab-btn-settings" onclick="switchTeacherTab('settings')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800">
                         기본 및 보안 설정
@@ -952,8 +961,8 @@
                 <span class="text-xl">🔒</span>
                 <h3 class="text-base font-black text-slate-800">감독(교사) 인증</h3>
             </div>
-            <p class="text-xs text-slate-500 font-medium">교사 전용 비밀번호를 입력해주세요.</p>
-            <input type="password" id="teacherPwInput" placeholder="비밀번호 입력" class="w-full p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="text-xs text-slate-500 font-medium">관리자/교사 비밀번호를 입력해주세요. <span class="text-blue-600 font-bold">(기본: 1234)</span></p>
+            <input type="password" id="teacherPwInput" placeholder="비밀번호 입력 (기본: 1234)" class="w-full p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
             <div class="flex gap-2">
                 <button type="button" onclick="closeTeacherAuthModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition">취소</button>
                 <button type="button" onclick="verifyTeacher()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition">확인</button>
@@ -1027,6 +1036,35 @@
             { en: "Nice to meet you.", ko: "만나서 반가워." }
         ];
 
+        // 기본 추천 영어 단원 세트 (DB가 비어있을 때 즉시 로드)
+        const defaultCurriculumUnits = [
+            {
+                id: "unit_def_1",
+                name: "1단원. How are you? (안부 묻기)",
+                text: "How are you? : 기분이 어때?\nI am happy. : 나는 행복해.\nI am tired. : 나는 피곤해.\nI am sad. : 나는 슬퍼.\nI feel great. : 기분이 아주 좋아."
+            },
+            {
+                id: "unit_def_2",
+                name: "2단원. What time is it? (시간 묻기)",
+                text: "What time is it? : 지금 몇 시니?\nIt is ten o'clock. : 10시야.\nIt is time for bed. : 잘 시간이야.\nIt is time for lunch. : 점심 먹을 시간이야.\nWake up please. : 일어나세요."
+            },
+            {
+                id: "unit_def_3",
+                name: "3단원. Where is the library? (위치 묻기)",
+                text: "Where is the library? : 도서관이 어디에 있나요?\nIt is on the second floor. : 2층에 있어.\nGo straight and turn left. : 직진해서 왼쪽으로 돌아.\nWhere is the music room? : 음악실은 어디인가요?\nIt is on the third floor. : 3층에 있어."
+            },
+            {
+                id: "unit_def_4",
+                name: "4단원. What are you doing? (현재 동작)",
+                text: "What are you doing? : 너 지금 뭐 하고 있어?\nI am reading a book. : 나는 책을 읽고 있어.\nI am doing homework. : 나는 숙제를 하고 있어.\nI am listening to music. : 나는 음악을 듣고 있어.\nI am playing games. : 나는 게임을 하고 있어."
+            },
+            {
+                id: "unit_def_5",
+                name: "5단원. I like baseball (취미와 운동)",
+                text: "I like playing baseball. : 나는 야구하는 것을 좋아해.\nHe hit a home run. : 그는 홈런을 쳤어.\nLet's play together. : 함께 경기하자.\nThat was a great hit. : 멋진 타격이었어.\nWe won the game. : 우리는 경기에서 이겼어."
+            }
+        ];
+
         // 이름 마스킹 통일 (홍O동, 김O, 남OO우)
         function maskStudentName(nameStr) {
             if (!nameStr) return '선수';
@@ -1054,9 +1092,20 @@
             return s[0] + 'O'.repeat(s.length - 2) + s[s.length - 1];
         }
 
-        // GNB 프로필 연동
+        // GNB 프로필 연동 (WaurimalStudent 우선)
         function getStudentInfo() {
             let info = { grade: '6', class: '1', number: '1', name: '선수' };
+            if (window.WaurimalStudent && typeof window.WaurimalStudent.get === 'function') {
+                const s = window.WaurimalStudent.get();
+                if (s && (s.name || s.studentName)) {
+                    return {
+                        grade: String(s.grade || 6),
+                        class: String(s.classNum || s.class || 1),
+                        number: String(s.studentNum || s.number || 1),
+                        name: s.name || s.studentName || '선수'
+                    };
+                }
+            }
             try {
                 const saved = localStorage.getItem('waurimal_student_profile');
                 if (saved) {
@@ -1130,6 +1179,7 @@
             const boxW = document.getElementById('boxWaitingRoom');
             if (boxW) boxW.classList.add('hidden');
             window.showScreen('screen-home');
+            updateUnitDropdowns();
             filterHofList();
         };
 
@@ -1152,7 +1202,7 @@
         // 출제 가능한 문장 풀 생성
         function getAvailableQuestions(unitId) {
             let pool = [];
-            if (unitId) {
+            if (unitId && unitId !== "custom") {
                 const u = unitsData.find(item => item.id === unitId);
                 if (u && u.text) {
                     u.text.split('\n').forEach(line => {
@@ -1332,8 +1382,16 @@
         window.createGameRoom = async () => {
             refreshStudentProfile();
             const unitSelect = document.getElementById('homeUnitSelect');
-            const unitId = unitSelect ? unitSelect.value : "";
-            const unitName = (unitSelect && unitSelect.selectedIndex > 0) ? unitSelect.options[unitSelect.selectedIndex].text : "자유 문장";
+            const unitId = unitSelect ? unitSelect.value : "custom";
+            let unitName = "직접 출제 (자유 문장)";
+            if (unitId === "custom") {
+                unitName = "직접 출제 (자유 문장)";
+            } else if (!unitId) {
+                unitName = "전체 단원 랜덤 출제";
+            } else {
+                const u = unitsData.find(item => item.id === unitId);
+                unitName = u ? u.name : "선택 단원";
+            }
 
             const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
             setLobbyMsg("새로운 구장을 생성하고 있습니다...");
@@ -1661,6 +1719,42 @@
             });
         });
 
+        window.activePitchTab = null;
+        window.switchPitchTab = (tab) => {
+            window.activePitchTab = tab;
+            const pManual = document.getElementById('panel-pitch-manual');
+            const pList = document.getElementById('panel-pitch-list');
+            const tManual = document.getElementById('tab-pitch-manual');
+            const tList = document.getElementById('tab-pitch-list');
+            if (!pManual || !pList) return;
+            if (tab === 'manual') {
+                pManual.classList.remove('hidden');
+                pList.classList.add('hidden');
+                if (tManual) {
+                    tManual.classList.remove('text-amber-800');
+                    tManual.classList.add('bg-white', 'text-amber-950', 'shadow-2xs');
+                }
+                if (tList) {
+                    tList.classList.remove('bg-white', 'text-amber-950', 'shadow-2xs');
+                    tList.classList.add('text-amber-800');
+                }
+                const inp = document.getElementById('manual-ko');
+                if (inp) inp.focus();
+            } else {
+                pManual.classList.add('hidden');
+                pList.classList.remove('hidden');
+                if (tManual) {
+                    tManual.classList.remove('bg-white', 'text-amber-950', 'shadow-2xs');
+                    tManual.classList.add('text-amber-800');
+                }
+                if (tList) {
+                    tList.classList.remove('text-amber-800');
+                    tList.classList.add('bg-white', 'text-amber-950', 'shadow-2xs');
+                }
+            }
+        };
+
+        window.renderInteractionPanel = renderInteractionPanel;
         function renderInteractionPanel(data, isMyTurnToAttack, phase) {
             const panel = document.getElementById('interaction-panel');
             let html = "";
@@ -1668,19 +1762,20 @@
 
             if (isMyTurnToAttack) {
                 if (phase === 'selecting_sentence') {
-                    html = `<div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-bold text-center">수비팀(투수)이 구질(문제)을 고르는 중입니다... ⚾</div>`;
+                    html = `<div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-bold text-center">수비팀(투수)이 구질(문제)을 준비하는 중입니다... ⚾</div>`;
                 } else if (phase === 'answering') {
+                    const method = (data.currentQuestion && data.currentQuestion.method === 'speak') ? '🎤 음성 타격' : '⌨️ 타자 타격';
                     html = `
                         <div class="p-4 bg-blue-50/80 border border-blue-200 rounded-xl space-y-3">
                             <div class="flex items-center justify-between">
                                 <div id="game-timer-display" class="text-xs font-black text-amber-600">⏳ 남은 시간: ${timeLimit}초</div>
-                                <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">타자 / 음성 타격</span>
+                                <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">${method}</span>
                             </div>
                             <h4 class="text-xs font-bold text-slate-700">날아오는 공(문제)을 받아쳐내세요! 🦇</h4>
                             <div class="text-lg font-black text-rose-600">"${data.currentQuestion.ko}"</div>
                             <div class="flex gap-2">
                                 <input type="text" id="answer-input" placeholder="정확한 영문장 입력 (Enter로 타격)" autocomplete="off" spellcheck="false" class="flex-1 p-2.5 bg-white border border-blue-300 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
-                                <button type="button" id="btn-start-speak" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow transition flex items-center gap-1.5" title="음성으로 말하기">
+                                <button type="button" id="btn-start-speak" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer" title="음성으로 말하기">
                                     <i class="fa-solid fa-microphone"></i>
                                     <span>말하기</span>
                                 </button>
@@ -1690,7 +1785,7 @@
                                 <span>* 마이크 허용 창이 매번 뜨나요?</span>
                                 <button type="button" onclick="showMicGuideModal()" class="text-blue-600 hover:underline font-bold">다시 묻지 않게 설정 💡</button>
                             </div>
-                            <button type="button" id="btn-submit-answer" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow transition">
+                            <button type="button" id="btn-submit-answer" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow transition cursor-pointer">
                                 타격하기 (제출) ⚾
                             </button>
                         </div>
@@ -1698,16 +1793,61 @@
                 }
             } else {
                 if (phase === 'selecting_sentence') {
+                    const isManual = window.activePitchTab ? (window.activePitchTab === 'manual') : (data.unitId === 'custom' || !data.unitId);
+                    const qListHtml = generateQuestionList(data.unitId);
                     html = `
                         <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
-                            <h4 class="text-xs font-black text-amber-800">투구(문제 출제)를 선택하세요! 🧤</h4>
-                            <div class="flex items-center justify-center gap-4 bg-white p-2 rounded-lg border border-amber-200 text-xs font-bold">
-                                <span>답변 방식:</span>
-                                <label class="cursor-pointer flex items-center gap-1"><input type="radio" name="q-method" value="type" checked> ⌨️ 타자</label>
-                                <label class="cursor-pointer flex items-center gap-1"><input type="radio" name="q-method" value="speak"> 🎤 말하기</label>
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <h4 class="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                                    <span>🧤</span> <span>투구(문제 출제)를 선택하세요!</span>
+                                </h4>
+                                <div class="flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-amber-200 text-xs font-bold text-amber-900">
+                                    <span class="text-[11px] text-amber-700">답변 방식:</span>
+                                    <label class="cursor-pointer flex items-center gap-1"><input type="radio" name="q-method" value="type" checked> ⌨️ 타자</label>
+                                    <label class="cursor-pointer flex items-center gap-1"><input type="radio" name="q-method" value="speak"> 🎤 말하기</label>
+                                </div>
                             </div>
-                            <div class="max-h-40 overflow-y-auto custom-scrollbar border border-amber-200 rounded-lg bg-white p-1 space-y-1">
-                                ${generateQuestionList(data.unitId)}
+
+                            <!-- 출제 방식 탭 (직접 만들기 vs 단원 목록) -->
+                            <div class="flex bg-amber-200/60 p-1 rounded-xl text-xs font-black gap-1">
+                                <button type="button" id="tab-pitch-manual" onclick="switchPitchTab('manual')" class="flex-1 py-1.5 rounded-lg text-center transition cursor-pointer ${isManual ? 'bg-white text-amber-950 shadow-2xs' : 'text-amber-800 hover:text-amber-950'}">
+                                    ✍️ 직접 문제 만들어 던지기
+                                </button>
+                                <button type="button" id="tab-pitch-list" onclick="switchPitchTab('list')" class="flex-1 py-1.5 rounded-lg text-center transition cursor-pointer ${!isManual ? 'bg-white text-amber-950 shadow-2xs' : 'text-amber-800 hover:text-amber-950'}">
+                                    📚 단원 문제 목록에서 선택하기
+                                </button>
+                            </div>
+
+                            <!-- 1) 직접 문제 만들어 던지기 영역 -->
+                            <div id="panel-pitch-manual" class="${isManual ? '' : 'hidden'} space-y-2.5 bg-white p-3.5 rounded-xl border border-amber-200">
+                                <div class="text-[11px] font-bold text-amber-800 flex items-center justify-between">
+                                    <span>상대 타자가 맞춰야 할 문제를 직접 만들어 투구하세요!</span>
+                                    <span class="text-[10px] text-slate-400">Enter로 즉시 투구</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-600 mb-0.5">한국어 문제 또는 뜻/힌트</label>
+                                        <input type="text" id="manual-ko" placeholder="예: 나는 행복해 / How are you의 뜻은?" autocomplete="off" class="w-full p-2 bg-slate-50 border border-amber-300 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-600 mb-0.5">영어 정답 (타자가 입력할 정답 문장)</label>
+                                        <input type="text" id="manual-en" placeholder="예: I am happy. / How are you?" autocomplete="off" class="w-full p-2 bg-slate-50 border border-amber-300 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-amber-500">
+                                    </div>
+                                </div>
+                                <button type="button" id="btn-send-manual" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-baseball"></i>
+                                    <span>직접 만든 문제로 공 던지기! ⚾</span>
+                                </button>
+                            </div>
+
+                            <!-- 2) 단원 문제 목록에서 선택 영역 -->
+                            <div id="panel-pitch-list" class="${!isManual ? '' : 'hidden'} space-y-2">
+                                <div class="text-[11px] font-bold text-amber-800 flex items-center justify-between">
+                                    <span>던질 구질(문제)을 클릭하면 상대 타자에게 즉시 투구됩니다:</span>
+                                </div>
+                                <div class="max-h-44 overflow-y-auto custom-scrollbar border border-amber-200 rounded-xl bg-white p-1 space-y-1">
+                                    ${qListHtml}
+                                </div>
                             </div>
                         </div>`;
                 } else if (phase === 'answering') {
@@ -1715,7 +1855,7 @@
                         <div class="p-4 bg-slate-100 border border-slate-200 rounded-xl text-center space-y-2">
                             <div id="game-timer-display" class="text-xs font-black text-amber-600">⏳ 남은 시간: ${timeLimit}초</div>
                             <div class="text-xs text-slate-600 font-bold">타자(상대방)가 투구를 받아치는 중입니다... 💦</div>
-                            <div class="text-xs text-slate-500 font-medium">던진 공: ${data.currentQuestion.ko}</div>
+                            <div class="text-xs text-slate-500 font-medium">던진 공: <strong>${data.currentQuestion ? data.currentQuestion.ko : ""}</strong> (정답: ${data.currentQuestion ? data.currentQuestion.en : ""})</div>
                         </div>`;
                 }
             }
@@ -1729,9 +1869,10 @@
             }
         }
 
+        window.generateQuestionList = generateQuestionList;
         function generateQuestionList(unitId) {
             let pool = [];
-            if (unitId) {
+            if (unitId && unitId !== "custom") {
                 const unit = unitsData.find(u => u.id === unitId);
                 if (unit && unit.text) {
                     pool = unit.text.split('\n').filter(l => l.trim().includes(':')).map(line => {
@@ -1741,18 +1882,26 @@
                 }
             }
             if (pool.length === 0) {
-                if (unitsData.length > 0 && unitsData[0].text) {
-                    pool = unitsData[0].text.split('\n').filter(l => l.trim().includes(':')).map(line => {
-                        const [en, ko] = line.split(':');
-                        return { en: en.trim(), ko: ko.trim() };
-                    });
-                } else {
-                    pool = defaultSampleQuestions;
-                }
+                unitsData.forEach(u => {
+                    if (u.text) {
+                        u.text.split('\n').filter(l => l.trim().includes(':')).forEach(line => {
+                            const [en, ko] = line.split(':');
+                            if (en && ko) pool.push({ en: en.trim(), ko: ko.trim() });
+                        });
+                    }
+                });
+            }
+            if (pool.length === 0) {
+                pool = defaultSampleQuestions;
             }
 
             return pool.map(item => {
-                return `<div class="q-item" data-en="${item.en}" data-ko="${item.ko}"><b>${item.ko}</b> (${item.en})</div>`;
+                const safeKo = window.WaurimalSanitize ? window.WaurimalSanitize(item.ko) : item.ko;
+                const safeEn = window.WaurimalSanitize ? window.WaurimalSanitize(item.en) : item.en;
+                return `<div class="q-item p-2 hover:bg-amber-50 cursor-pointer rounded-lg border border-slate-100 flex items-center justify-between text-xs" data-en="${item.en}" data-ko="${item.ko}">
+                    <span class="font-bold text-slate-800">⚾ ${safeKo}</span>
+                    <span class="text-slate-400 font-medium">${safeEn}</span>
+                </div>`;
             }).join('');
         }
 
@@ -1777,8 +1926,12 @@
             timerInterval = setInterval(updateTick, 1000);
         }
 
-        // 엔터키 타격 제출
+        // 엔터키 입력 처리 (수비수 투구 & 타자 타격)
         document.getElementById('interaction-panel').addEventListener('keypress', (e) => {
+            if ((e.target.id === 'manual-ko' || e.target.id === 'manual-en') && e.key === 'Enter') {
+                const btn = document.getElementById('btn-send-manual');
+                if (btn) btn.click();
+            }
             if (e.target.id === 'answer-input' && e.key === 'Enter') {
                 const btn = document.getElementById('btn-submit-answer');
                 if (btn) btn.click();
@@ -1790,17 +1943,43 @@
             if (!window.currentGameData) return;
             const data = window.currentGameData;
 
-            // 투구 문제 선택 (1:1 모드 수비수)
+            // 1. 직접 만든 문제로 공 던지기 (1:1 모드 수비수)
+            if (e.target.id === 'btn-send-manual' || e.target.closest('#btn-send-manual')) {
+                const enInp = document.getElementById('manual-en');
+                const koInp = document.getElementById('manual-ko');
+                const en = enInp ? enInp.value.trim() : "";
+                const ko = koInp ? koInp.value.trim() : "";
+                if (!en || !ko) {
+                    alert("한국어 문제와 영어 정답을 모두 입력해주세요!");
+                    if (!ko && koInp) koInp.focus();
+                    else if (!en && enInp) enInp.focus();
+                    return;
+                }
+                const methodRadio = document.querySelector('input[name="q-method"]:checked');
+                const method = methodRadio ? methodRadio.value : 'type';
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+                await updateDoc(roomRef, {
+                    turnPhase: 'answering',
+                    currentQuestion: { en, ko, method, startTime: Date.now() }
+                });
+                return;
+            }
+
+            // 2. 투구 문제 목록에서 선택 (1:1 모드 수비수)
             const qItem = e.target.closest('.q-item');
             if (qItem && !isSoloMode) {
                 const en = qItem.getAttribute('data-en'), ko = qItem.getAttribute('data-ko');
                 const methodRadio = document.querySelector('input[name="q-method"]:checked');
                 const method = methodRadio ? methodRadio.value : 'type';
                 const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
-                await updateDoc(roomRef, { turnPhase: 'answering', currentQuestion: { en, ko, method, startTime: Date.now() } });
+                await updateDoc(roomRef, {
+                    turnPhase: 'answering',
+                    currentQuestion: { en, ko, method, startTime: Date.now() }
+                });
+                return;
             }
 
-            // 타격 버튼 클릭
+            // 3. 타격 버튼 클릭
             if (e.target.id === 'btn-submit-answer') {
                 const userIn = document.getElementById('answer-input').value;
                 submitAnswerCheck(userIn, data.currentQuestion.en, data);
@@ -1900,7 +2079,7 @@
 
         function submitAnswerCheck(userIn, correct, data) {
             if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-            const norm = (s) => (s||"").toLowerCase().replace(/[^a-z0-9]/g, '');
+            const norm = (s) => (s||"").toLowerCase().replace(/[^a-z0-9가-힣]/gi, '').trim();
             const isCorrect = norm(userIn) === norm(correct);
             
             let hitType = "", hitText = "", detailText = "", isOut = false, isWalk = false;
@@ -2132,14 +2311,19 @@
             if(!data) return;
 
             let sentences = [];
-            if (data.unitId) {
+            if (data.unitId && data.unitId !== "custom") {
                 const unit = unitsData.find(u => u.id === data.unitId);
                 if (unit && unit.text) {
                     sentences = unit.text.split('\n').filter(l => l.trim().length > 0);
                 }
             }
             if (sentences.length === 0) {
-                if (isSoloMode && soloQuestionPool.length > 0) {
+                if (data.unitId === "custom" || !data.unitId) {
+                    sentences = ["✍️ [직접 출제 경기] 수비팀이 매 투구마다 직접 문제를 만들어 공을 던집니다."];
+                    if (data.currentQuestion && data.currentQuestion.ko) {
+                        sentences.push(`⚾ 현재 투구: ${data.currentQuestion.ko} (정답: ${data.currentQuestion.en})`);
+                    }
+                } else if (isSoloMode && soloQuestionPool.length > 0) {
                     sentences = soloQuestionPool.map(q => `${q.en} : ${q.ko}`);
                 } else if (unitsData.length > 0 && unitsData[0].text) {
                     sentences = unitsData[0].text.split('\n').filter(l => l.trim().length > 0);
@@ -2400,9 +2584,23 @@
         };
 
         window.prepareNewUnit = () => {
-            document.getElementById('t-unit-select').value = 'new';
-            document.getElementById('t-unit-name').value = '';
-            document.getElementById('t-unit-sentences').value = '';
+            const select = document.getElementById('t-unit-select');
+            if (select) select.value = 'new';
+            const nameEl = document.getElementById('t-unit-name');
+            if (nameEl) {
+                nameEl.value = '';
+                nameEl.focus();
+            }
+            const sentEl = document.getElementById('t-unit-sentences');
+            if (sentEl) sentEl.value = '';
+        };
+
+        window.loadTeacherUnit = (id) => {
+            const select = document.getElementById('t-unit-select');
+            if (select) {
+                select.value = id;
+                window.loadSelectedTeacherUnit();
+            }
         };
 
         window.loadSelectedTeacherUnit = () => {
@@ -2413,8 +2611,8 @@
             } else {
                 const u = unitsData.find(item => item.id === val);
                 if (u) {
-                    document.getElementById('t-unit-name').value = u.name;
-                    document.getElementById('t-unit-sentences').value = u.text;
+                    document.getElementById('t-unit-name').value = u.name || '';
+                    document.getElementById('t-unit-sentences').value = u.text || '';
                 }
             }
         };
@@ -2423,23 +2621,54 @@
             const name = document.getElementById('t-unit-name').value.trim();
             const text = document.getElementById('t-unit-sentences').value.trim();
             const selectedId = document.getElementById('t-unit-select').value;
-            if(!name || !text) { alert("단원명과 문장을 모두 입력해주세요."); return; }
+            if (!name || !text) {
+                alert("단원명과 문제 문장을 모두 입력해주세요.");
+                return;
+            }
 
             let newItems = [...unitsData];
+            let targetId = selectedId;
             if (selectedId === 'new') {
-                newItems.push({ id: Date.now().toString(), name, text });
+                targetId = 'unit_' + Date.now();
+                newItems.push({ id: targetId, name, text });
             } else {
                 const idx = newItems.findIndex(u => u.id === selectedId);
-                if (idx > -1) newItems[idx] = { ...newItems[idx], name, text };
+                if (idx > -1) {
+                    newItems[idx] = { ...newItems[idx], name, text };
+                } else {
+                    newItems.push({ id: targetId, name, text });
+                }
             }
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'units'), { items: newItems });
+            unitsData = newItems;
+            try {
+                localStorage.setItem('waurimal_baseball_units', JSON.stringify(newItems));
+            } catch(e) {}
+            updateUnitDropdowns();
+            const select = document.getElementById('t-unit-select');
+            if (select) select.value = targetId;
+
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'units'), { items: newItems });
+            } catch(e) {
+                console.warn("DB save notice:", e);
+            }
             alert("단원이 성공적으로 저장되었습니다!");
         };
 
         window.deleteUnit = async (id) => {
             if (!confirm("이 단원을 삭제하시겠습니까?")) return;
             let newItems = unitsData.filter(u => u.id !== id);
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'units'), { items: newItems });
+            unitsData = newItems;
+            try {
+                localStorage.setItem('waurimal_baseball_units', JSON.stringify(newItems));
+            } catch(e) {}
+            updateUnitDropdowns();
+            window.prepareNewUnit();
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'units'), { items: newItems });
+            } catch(e) {
+                console.warn("DB delete notice:", e);
+            }
             alert("단원이 삭제되었습니다.");
         };
 
@@ -2461,42 +2690,86 @@
             alert("기본 설정이 성공적으로 저장되었습니다!");
         };
 
+        window.updateHomeUnitDesc = () => {
+            const el = document.getElementById('homeUnitDesc');
+            const sel = document.getElementById('homeUnitSelect');
+            if (!el || !sel) return;
+            const val = sel.value;
+            if (val === 'custom') {
+                el.innerText = '수비수(투수)가 경기 중 직접 영어 문제를 만들어 공을 던지고 타자가 맞힙니다!';
+            } else if (val === '') {
+                el.innerText = '등록된 모든 단원의 영어 문장이 무작위로 고르게 출제됩니다.';
+            } else {
+                const u = unitsData.find(item => item.id === val);
+                el.innerText = u ? `선택된 '${u.name}' 단원의 문장들 중에서 출제됩니다.` : '선택한 단원의 문장이 출제됩니다.';
+            }
+        };
+
         function updateUnitDropdowns() {
             const homeSelect = document.getElementById('homeUnitSelect');
             const teacherSelect = document.getElementById('t-unit-select');
             const teacherList = document.getElementById('teacher-unit-list');
 
             if (homeSelect) {
-                homeSelect.innerHTML = '<option value="">전체 단원 (랜덤 문장 출제)</option>';
+                const curVal = homeSelect.value;
+                let opts = `
+                    <option value="custom">✍️ 직접 문제 만들고 풀기 (수비수가 자유 출제)</option>
+                    <option value="">🎲 전체 단원 (등록된 모든 문장 랜덤 출제)</option>
+                `;
                 unitsData.forEach(u => {
-                    homeSelect.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+                    const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(u.name) : u.name;
+                    opts += `<option value="${u.id}">📚 ${safeName}</option>`;
                 });
+                homeSelect.innerHTML = opts;
+                if (curVal && homeSelect.querySelector(`option[value="${curVal}"]`)) {
+                    homeSelect.value = curVal;
+                } else {
+                    homeSelect.value = 'custom';
+                }
+                updateHomeUnitDesc();
             }
             const hofUnitSelect = document.getElementById('hof-filter-unit');
             if (hofUnitSelect) {
                 const curVal = hofUnitSelect.value || 'ALL';
-                hofUnitSelect.innerHTML = '<option value="ALL">전체 단원</option>';
+                let opts = '<option value="ALL">전체 단원</option>';
                 unitsData.forEach(u => {
-                    hofUnitSelect.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+                    const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(u.name) : u.name;
+                    opts += `<option value="${u.id}">${safeName}</option>`;
                 });
+                hofUnitSelect.innerHTML = opts;
                 hofUnitSelect.value = curVal;
             }
             if (teacherSelect) {
-                teacherSelect.innerHTML = '<option value="new">+ 새 단원 추가 (새로 작성)</option>';
+                const curVal = teacherSelect.value;
+                let opts = '<option value="new">+ 새 단원 추가 (새로 작성)</option>';
                 unitsData.forEach(u => {
-                    teacherSelect.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+                    const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(u.name) : u.name;
+                    opts += `<option value="${u.id}">${safeName}</option>`;
                 });
+                teacherSelect.innerHTML = opts;
+                if (curVal && teacherSelect.querySelector(`option[value="${curVal}"]`)) {
+                    teacherSelect.value = curVal;
+                }
             }
             if (teacherList) {
                 if (unitsData.length === 0) {
-                    teacherList.innerHTML = '<div class="p-3 text-center text-slate-400">등록된 단원이 없습니다.</div>';
+                    teacherList.innerHTML = '<div class="p-3 text-center text-slate-400">등록된 단원이 없습니다. 위 양식에서 새 단원을 작성해보세요!</div>';
                 } else {
-                    teacherList.innerHTML = unitsData.map(u => `
-                        <div class="flex justify-between items-center py-2 px-2 hover:bg-slate-50">
-                            <span class="font-bold text-slate-800">${u.name}</span>
-                            <button type="button" onclick="deleteUnit('${u.id}')" class="px-2 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded text-[11px] font-bold">삭제</button>
-                        </div>
-                    `).join('');
+                    teacherList.innerHTML = unitsData.map(u => {
+                        const safeName = window.WaurimalSanitize ? window.WaurimalSanitize(u.name) : u.name;
+                        return `
+                            <div class="flex justify-between items-center py-2 px-2.5 hover:bg-slate-50 rounded-lg group">
+                                <button type="button" onclick="loadTeacherUnit('${u.id}')" class="font-bold text-slate-800 hover:text-blue-600 text-left flex-1 truncate cursor-pointer flex items-center gap-1.5">
+                                    <span class="text-blue-500">📘</span>
+                                    <span>${safeName}</span>
+                                </button>
+                                <div class="flex items-center gap-1">
+                                    <button type="button" onclick="loadTeacherUnit('${u.id}')" class="px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded text-[11px] font-bold cursor-pointer">수정</button>
+                                    <button type="button" onclick="deleteUnit('${u.id}')" class="px-2 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded text-[11px] font-bold cursor-pointer">삭제</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
                 }
             }
         }
@@ -2513,13 +2786,40 @@
 
             refreshStudentProfile();
 
-            // 설정 & 단원 실시간 구독 (기존 DB 데이터 즉각 반영)
+            // 1. 로컬 캐시 즉시 복원 (0ms 무지연 로딩)
+            try {
+                const cached = localStorage.getItem('waurimal_baseball_units');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        unitsData = parsed;
+                    }
+                }
+            } catch(e) {}
+            if (unitsData.length === 0) {
+                unitsData = [...defaultCurriculumUnits];
+            }
+            updateUnitDropdowns();
+
+            // 홈 단원 변경 리스너
+            const homeSel = document.getElementById('homeUnitSelect');
+            if (homeSel) {
+                homeSel.addEventListener('change', updateHomeUnitDesc);
+            }
+
+            // 2. 설정 & 단원 실시간 구독 (기존 DB 데이터 즉각 반영)
             onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), (snap) => {
                 if(snap.exists()) globalSettings = { ...globalSettings, ...snap.data() };
             });
             onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'units'), (snap) => {
-                if(snap.exists()) unitsData = snap.data().items || [];
-                else unitsData = [];
+                if(snap.exists() && snap.data().items && snap.data().items.length > 0) {
+                    unitsData = snap.data().items;
+                } else if (unitsData.length === 0) {
+                    unitsData = [...defaultCurriculumUnits];
+                }
+                try {
+                    localStorage.setItem('waurimal_baseball_units', JSON.stringify(unitsData));
+                } catch(e) {}
                 updateUnitDropdowns();
             });
 
